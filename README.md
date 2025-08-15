@@ -1,6 +1,6 @@
 # PPG Analysis Tool - Modular Version
 
-A refactored, modular version of the PPG (Photoplethysmogram) analysis tool built with Dash.
+A refactored, modular version of the PPG (Photoplethysmogram) analysis tool built with Dash, designed for both local development and cloud deployment.
 
 ## 🏗️ **New Modular Structure**
 
@@ -27,15 +27,14 @@ photoplethymogram/
 │       ├── __init__.py
 │       └── settings.py          # Constants & defaults
 ├── tests/                       # Test suite
-│   ├── __init__.py              # Test package initialization
-│   ├── test_config.py           # Configuration tests
-│   ├── test_utils.py            # Utility function tests
-│   ├── test_ppg_analysis.py     # PPG analysis tests
-│   ├── test_callbacks.py        # Callback tests
-│   ├── test_integration.py      # Integration tests
-│   └── run_tests.py             # Test runner
-├── main.py                      # Entry point
-├── requirements.txt             # Dependencies
+├── main.py                      # Development entry point
+├── main-prod.py                 # Production entry point
+├── Dockerfile.prod              # Production Docker configuration
+├── requirements.txt             # Development dependencies
+├── requirements-prod.txt        # Production dependencies
+├── render.yaml                  # Render.com deployment config
+├── cloudbuild.yaml             # Google Cloud Build config
+├── deploy.sh                   # Deployment automation script
 └── README.md                    # This file
 ```
 
@@ -78,15 +77,157 @@ pip install -r requirements.txt
 
 # For development and testing
 pip install -r requirements-dev.txt
+
+# For production deployment
+pip install -r requirements-prod.txt
 ```
 
 ### **2. Run the Application**
+
+#### **Development Mode**
 ```bash
 python main.py
 ```
 
+#### **Production Mode**
+```bash
+python main-prod.py
+```
+
 ### **3. Access the Web Interface**
-Open your browser and navigate to `http://localhost:8050`
+- **Development**: Open `http://localhost:8050`
+- **Production**: Open `http://localhost:8080` (or your configured port)
+
+## 🚀 **Deployment Options**
+
+This tool is designed for easy deployment to various cloud platforms with Docker support.
+
+### **🐳 Docker Deployment**
+
+#### **Quick Start with Docker**
+```bash
+# Build the production image
+docker build -f Dockerfile.prod -t ppg-tool:latest .
+
+# Run locally
+docker run -d --name ppg-tool -p 8080:8080 ppg-tool:latest
+
+# Access at http://localhost:8080
+```
+
+#### **Docker Compose (Development)**
+```bash
+# Start the application
+docker-compose up -d
+
+# View logs
+docker-compose logs -f ppg-tool
+
+# Stop the application
+docker-compose down
+```
+
+### **☁️ Render.com Deployment**
+
+#### **Option 1: Using Render Dashboard**
+1. Connect your GitHub repository to Render.com
+2. Create a new Web Service
+3. Configure with:
+   - **Build Command**: `pip install -r requirements-prod.txt`
+   - **Start Command**: `python main-prod.py`
+   - **Environment Variables**:
+     - `PYTHON_VERSION`: `3.11.0`
+     - `PORT`: `8080`
+     - `DEBUG`: `false`
+
+#### **Option 2: Using Render Blueprint**
+```bash
+# Install Render CLI
+curl -sSL https://render.com/download-cli/install.sh | bash
+
+# Deploy using the blueprint
+render blueprint apply
+```
+
+#### **Option 3: Using Deployment Script**
+```bash
+chmod +x deploy.sh
+./deploy.sh render
+```
+
+### **☁️ Google Cloud Platform Deployment**
+
+#### **Prerequisites**
+```bash
+# Install Google Cloud SDK
+# macOS
+brew install google-cloud-sdk
+
+# Ubuntu/Debian
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+echo "deb https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+sudo apt-get update && sudo apt-get install google-cloud-sdk
+
+# Authenticate and set project
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+```
+
+#### **Deploy to Cloud Run**
+```bash
+# Using Cloud Build (Recommended)
+gcloud builds submit --config cloudbuild.yaml .
+
+# Using deployment script
+chmod +x deploy.sh
+./deploy.sh gcp
+
+# Manual deployment
+docker build -f Dockerfile.prod -t gcr.io/YOUR_PROJECT_ID/ppg-tool .
+docker push gcr.io/YOUR_PROJECT_ID/ppg-tool
+
+gcloud run deploy ppg-tool \
+  --image gcr.io/YOUR_PROJECT_ID/ppg-tool \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --port 8080
+```
+
+### **🔧 Environment Variables**
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `PORT` | Port to run the application on | `8080` | No |
+| `DEBUG` | Enable debug mode | `false` | No |
+| `PYTHONPATH` | Python path for imports | `/app/src` | No |
+
+### **📊 Health Checks**
+
+The application includes a health check endpoint at `/health` used by:
+- Docker health checks
+- Load balancers
+- Cloud platforms for monitoring
+
+### **🔒 Security Features**
+
+- **Non-root user**: Application runs as non-root user `app`
+- **Minimal base image**: Uses Python slim image to reduce attack surface
+- **Security headers**: Nginx configuration includes security headers
+- **Port binding**: Only binds to necessary ports
+
+### **📈 Scaling Configuration**
+
+#### **Render.com**
+- **Auto-scaling**: 1-3 instances
+- **Target concurrency**: 100 requests per instance
+- **Memory utilization**: Scales at 80% memory usage
+
+#### **Google Cloud Platform**
+- **Cloud Run**: Automatically scales to zero when not in use
+- **Max instances**: Limited to 10 instances
+- **Memory**: 512MB per instance
+- **CPU**: 1 vCPU per instance
 
 ## 🔧 **Development**
 
@@ -171,7 +312,7 @@ This project includes a comprehensive GitHub Actions workflow (`.github/workflow
 ### **Dependencies**
 - **Production**: Core dependencies in `requirements.txt`
 - **Development**: Development tools in `requirements-dev.txt`
-- **Optional**: Feature-specific dependencies available as extras
+- **Production**: Optimized dependencies in `requirements-prod.txt`
 - **UI Layout**: Modify `src/components/layout.py`
 - **Styling**: Update `src/components/styles.py`
 - **Defaults**: Change `src/config/settings.py`
@@ -270,6 +411,32 @@ If you're migrating from the original `ppg_tool.py`:
 3. **Run the new version**: `python main.py`
 4. **Test functionality** to ensure everything works as expected
 
+## 🚀 **Deployment Best Practices**
+
+### **Environment Configuration**
+- Use `main-prod.py` for production deployments
+- Set `DEBUG=false` in production
+- Configure appropriate port binding (`0.0.0.0` for Docker)
+- Disable hot reload and debug UI in production
+
+### **Docker Optimization**
+- Use multi-stage builds to reduce image size
+- Leverage layer caching for faster builds
+- Include only production dependencies
+- Run as non-root user for security
+
+### **Cloud Platform Considerations**
+- **Render.com**: Great for simple deployments with automatic scaling
+- **Google Cloud**: More control over infrastructure and scaling
+- **Health Checks**: Essential for load balancer integration
+- **Environment Variables**: Use for configuration management
+
+### **Monitoring and Logging**
+- Implement proper logging for production debugging
+- Use platform-specific monitoring tools
+- Set up alerts for application health
+- Monitor resource usage and scaling metrics
+
 ## 📝 **Contributing**
 
 When contributing to this project:
@@ -278,6 +445,7 @@ When contributing to this project:
 2. **Add docstrings** to new functions
 3. **Update relevant modules** when adding features
 4. **Test your changes** before submitting
+5. **Follow deployment guidelines** when adding deployment-related changes
 
 ## 📄 **License**
 
@@ -285,4 +453,4 @@ This project is open source. Feel free to use, modify, and distribute according 
 
 ---
 
-**Note**: This modular version maintains all the functionality of the original while providing a much cleaner, maintainable codebase structure.
+**Note**: This modular version maintains all the functionality of the original while providing a much cleaner, maintainable codebase structure and comprehensive deployment options for various cloud platforms.

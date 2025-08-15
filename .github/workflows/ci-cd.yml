@@ -62,8 +62,20 @@ jobs:
     - name: Upload coverage artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: coverage-report
+        name: coverage-report-python-${{ matrix.python-version }}
         path: htmlcov/
+        # Alternative: If you want a single coverage report, you could:
+        # 1. Remove the matrix strategy for the test job
+        # 2. Or create a separate coverage job that runs after all tests
+        # 3. Or use if: matrix.python-version == '3.9' to only upload from one version
+        
+    # Alternative approach for single coverage report:
+    # - name: Upload coverage artifacts (single report)
+    #   if: matrix.python-version == '3.9'  # Only upload from one Python version
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: coverage-report
+    #     path: htmlcov/
 
   security:
     name: Security Scan
