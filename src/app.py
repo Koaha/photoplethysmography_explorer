@@ -13,15 +13,15 @@ def create_app():
     app = dash.Dash(__name__)
     app.title = "PPG Filter Lab — Window Mode (Wide)"
     app.index_string = APP_INDEX_STRING
-    
+
     # Set up the layout
     app.layout = create_layout()
-    
+
     # Register all callbacks
     register_data_callbacks(app)
     register_window_callbacks(app)
     register_plot_callbacks(app)
-    
+
     return app
 
 
