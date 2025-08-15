@@ -9,7 +9,6 @@ on:
     types: [ published ]
 
 env:
-  PYTHON_VERSION: '3.9'
   PIP_CACHE_DIR: ~/.cache/pip
 
 jobs:
@@ -42,8 +41,13 @@ jobs:
         
     - name: Run linting checks
       run: |
+        # Install linting tools explicitly to ensure they're available
+        pip install flake8 black isort
+        # Run flake8 with proper configuration
         flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503,W291,W293,E501,F401,F841,E722,W605,E731,F403,F405,E402,C901
+        # Run black check
         black --check src/ tests/
+        # Run isort check
         isort --check-only src/ tests/
         
     - name: Run tests with coverage
@@ -63,19 +67,7 @@ jobs:
       with:
         name: coverage-report-python-${{ matrix.python-version }}
         path: htmlcov/
-        # Alternative: If you want a single coverage report, you could:
-        # 1. Remove the matrix strategy for the test job
-        # 2. Or create a separate coverage job that runs after all tests
-        # 3. Or use if: matrix.python-version == '3.9' to only upload from one version
         
-    # Alternative approach for single coverage report:
-    # - name: Upload coverage artifacts (single report)
-    #   if: matrix.python-version == '3.9'  # Only upload from one Python version
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: coverage-report
-    #     path: htmlcov/
-
   security:
     name: Security Scan
     runs-on: ubuntu-latest
