@@ -54,7 +54,7 @@ class TestApplicationIntegration(unittest.TestCase):
     def test_complete_data_processing_pipeline(self):
         """Test the complete data processing pipeline."""
         # 1. Read data
-        df = read_window(self.temp_path, ["red", "ir"], 0, 999)
+        df = read_window(self.temp_path, ["red", "ir"], 0, 1000)
         self.assertEqual(len(df), 1000)
         self.assertIn("red", df.columns)
         self.assertIn("ir", df.columns)
@@ -92,7 +92,7 @@ class TestApplicationIntegration(unittest.TestCase):
     def test_signal_quality_metrics(self):
         """Test signal quality metrics computation."""
         # Read and process data
-        df = read_window(self.temp_path, ["red", "ir"], 0, 999)
+        df = read_window(self.temp_path, ["red", "ir"], 0, 1000)
         red = df["red"].astype(float).to_numpy()
         ir = df["ir"].astype(float).to_numpy()
         fs = 100

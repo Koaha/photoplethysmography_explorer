@@ -918,8 +918,13 @@ class PlotManager:
         fig = go.Figure()
 
         # Create a bar chart of key statistics
-        if features:
-            # Extract key metrics
+        if (
+            features
+            and isinstance(features, dict)
+            and "statistical" in features
+            and features["statistical"]
+        ):
+            # Extract key metrics from the statistical section
             metrics = [
                 "mean",
                 "rms",
@@ -928,8 +933,48 @@ class PlotManager:
                 "shape_factor",
                 "impulse_factor",
             ]
-            values = [features.get(metric, 0) for metric in metrics]
+            values = [features["statistical"].get(metric, 0) for metric in metrics]
             labels = [metric.replace("_", " ").title() for metric in metrics]
+
+            # Add timing features if available
+            if "timing" in features:
+                timing_metrics = ["num_peaks", "estimated_hr"]
+                timing_values = [features["timing"].get(metric, 0) for metric in timing_metrics]
+                timing_labels = ["Number of Peaks", "Estimated HR (BPM)"]
+
+                # Add timing metrics to the plot
+                for i, (label, value) in enumerate(zip(timing_labels, timing_values)):
+                    if value != 0:  # Only add non-zero values
+                        fig.add_trace(
+                            go.Bar(
+                                x=[label],
+                                y=[value],
+                                marker_color="#ff7f0e",  # Different color for timing metrics
+                                hovertemplate="%{x}<br>%{y:.3f}<extra></extra>",
+                                showlegend=False,
+                            )
+                        )
+
+            # Add signal quality features if available
+            if "signal_quality" in features:
+                quality_metrics = ["snr_estimate", "dynamic_range"]
+                quality_values = [
+                    features["signal_quality"].get(metric, 0) for metric in quality_metrics
+                ]
+                quality_labels = ["SNR Estimate (dB)", "Dynamic Range (dB)"]
+
+                # Add quality metrics to the plot
+                for i, (label, value) in enumerate(zip(quality_labels, quality_values)):
+                    if value != 0:  # Only add non-zero values
+                        fig.add_trace(
+                            go.Bar(
+                                x=[label],
+                                y=[value],
+                                marker_color="#2ca02c",  # Different color for quality metrics
+                                hovertemplate="%{x}<br>%{y:.3f}<extra></extra>",
+                                showlegend=False,
+                            )
+                        )
 
             # Create bar chart
             fig.add_trace(
@@ -942,9 +987,9 @@ class PlotManager:
             )
 
             # Add horizontal line for mean value
-            if "mean" in features:
+            if "mean" in features["statistical"]:
                 fig.add_hline(
-                    y=features["mean"],
+                    y=features["statistical"]["mean"],
                     line_dash="dash",
                     line_color="red",
                     annotation_text="Mean",
@@ -952,8 +997,17 @@ class PlotManager:
                 )
         else:
             # No features available
+            if not features:
+                text = "No waveform features available"
+            elif not isinstance(features, dict):
+                text = "Invalid features format"
+            elif "statistical" not in features:
+                text = "Statistical features missing"
+            else:
+                text = "No waveform features available"
+
             fig.add_annotation(
-                text="No waveform features available",
+                text=text,
                 xref="paper",
                 yref="paper",
                 x=0.5,

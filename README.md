@@ -80,6 +80,45 @@ The application is live and ready to use. Upload your PPG data files and start a
 
 ---
 
+## 📚 **Documentation**
+
+**Comprehensive documentation is now available!** 📖
+
+### **Building Documentation**
+
+**On Windows:**
+```bash
+# Option 1: Use the batch file
+build_docs.bat
+
+# Option 2: Use Python directly
+python build_docs.py
+
+# Option 3: Use make (if available)
+make docs
+```
+
+**On Unix/Linux/macOS:**
+```bash
+# Use make
+make docs
+
+# Or use Python directly
+python build_docs.py
+```
+
+### **Documentation Structure**
+- **📖 Installation Guide**: Complete setup instructions
+- **👥 User Guide**: Comprehensive usage instructions
+- **🔧 API Reference**: Technical API documentation
+- **🛠️ Development Guide**: Developer setup and workflow
+- **🤝 Contributing Guide**: How to contribute to the project
+
+### **Viewing Documentation**
+After building, open `docs/_build/html/index.html` in your web browser to view the complete documentation.
+
+---
+
 ## 🏗️ **New Modular Structure**
 
 ```

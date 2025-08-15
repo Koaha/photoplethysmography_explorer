@@ -181,7 +181,7 @@ class TestFileUtils(unittest.TestCase):
 
     def test_read_window(self):
         """Test window reading."""
-        df = read_window(self.temp_path, ["red", "ir"], 100, 200)
+        df = read_window(self.temp_path, ["red", "ir"], 100, 201)
         self.assertEqual(len(df), 101)  # 100 to 200 inclusive
         self.assertIn("red", df.columns)
         self.assertIn("ir", df.columns)

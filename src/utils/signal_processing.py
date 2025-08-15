@@ -384,68 +384,85 @@ def compute_waveform_features(signal, fs):
     Returns:
         dict: Dictionary containing waveform features
     """
-    # Basic statistical features
-    mean_val = np.mean(signal)
-    std_val = np.std(signal)
-    rms_val = np.sqrt(np.mean(signal**2))
+    try:
+        # Validate input
+        if signal is None or len(signal) == 0:
+            print("WARNING: Empty or None signal passed to compute_waveform_features")
+            return {}
 
-    # Peak-to-peak amplitude
-    peak_to_peak = np.max(signal) - np.min(signal)
+        if not isinstance(signal, np.ndarray):
+            signal = np.array(signal)
 
-    # Crest factor (peak amplitude / RMS)
-    crest_factor = np.max(np.abs(signal)) / rms_val if rms_val > 0 else 0
+        if np.any(np.isnan(signal)) or np.any(np.isinf(signal)):
+            print("WARNING: Signal contains NaN or Inf values")
+            signal = np.nan_to_num(signal, nan=0.0, posinf=0.0, neginf=0.0)
 
-    # Shape factor (RMS / mean absolute value)
-    shape_factor = rms_val / np.mean(np.abs(signal)) if np.mean(np.abs(signal)) > 0 else 0
+        # Basic statistical features
+        mean_val = np.mean(signal)
+        std_val = np.std(signal)
+        rms_val = np.sqrt(np.mean(signal**2))
 
-    # Impulse factor (peak amplitude / mean absolute value)
-    impulse_factor = (
-        np.max(np.abs(signal)) / np.mean(np.abs(signal)) if np.mean(np.abs(signal)) > 0 else 0
-    )
+        # Peak-to-peak amplitude
+        peak_to_peak = np.max(signal) - np.min(signal)
 
-    # Margin factor (peak amplitude / mean absolute value of signal above mean)
-    above_mean = signal[signal > mean_val]
-    margin_factor = (
-        np.max(signal) / np.mean(above_mean)
-        if len(above_mean) > 0 and np.mean(above_mean) > 0
-        else 0
-    )
+        # Crest factor (peak amplitude / RMS)
+        crest_factor = np.max(np.abs(signal)) / rms_val if rms_val > 0 else 0
 
-    # Peak detection for timing features
-    peaks, _ = find_peaks(signal, prominence=0.1 * std_val)
+        # Shape factor (RMS / mean absolute value)
+        shape_factor = rms_val / np.mean(np.abs(signal)) if np.mean(np.abs(signal)) > 0 else 0
 
-    if len(peaks) > 1:
-        # Inter-peak intervals
-        peak_intervals = np.diff(peaks) / fs
-        mean_interval = np.mean(peak_intervals)
-        std_interval = np.std(peak_intervals)
+        # Impulse factor (peak amplitude / mean absolute value)
+        impulse_factor = (
+            np.max(np.abs(signal)) / np.mean(np.abs(signal)) if np.mean(np.abs(signal)) > 0 else 0
+        )
 
-        # Heart rate variability (if applicable)
-        hrv = 60.0 / mean_interval if mean_interval > 0 else 0
-    else:
-        mean_interval = std_interval = hrv = 0
+        # Margin factor (peak amplitude / mean absolute value of signal above mean)
+        above_mean = signal[signal > mean_val]
+        margin_factor = (
+            np.max(signal) / np.mean(above_mean)
+            if len(above_mean) > 0 and np.mean(above_mean) > 0
+            else 0
+        )
 
-    features = {
-        "statistical": {
-            "mean": mean_val,
-            "std": std_val,
-            "rms": rms_val,
-            "peak_to_peak": peak_to_peak,
-            "crest_factor": crest_factor,
-            "shape_factor": shape_factor,
-            "impulse_factor": impulse_factor,
-            "margin_factor": margin_factor,
-        },
-        "timing": {
-            "num_peaks": len(peaks),
-            "mean_peak_interval": mean_interval,
-            "std_peak_interval": std_interval,
-            "estimated_hr": hrv,
-        },
-        "signal_quality": {
-            "snr_estimate": 20 * np.log10(np.max(signal) / std_val) if std_val > 0 else 0,
-            "dynamic_range": np.log10(peak_to_peak / std_val) if std_val > 0 else 0,
-        },
-    }
+        # Peak detection for timing features
+        peaks, _ = find_peaks(signal, prominence=0.1 * std_val)
 
-    return features
+        if len(peaks) > 1:
+            # Inter-peak intervals
+            peak_intervals = np.diff(peaks) / fs
+            mean_interval = np.mean(peak_intervals)
+            std_interval = np.std(peak_intervals)
+
+            # Heart rate variability (if applicable)
+            hrv = 60.0 / mean_interval if mean_interval > 0 else 0
+        else:
+            mean_interval = std_interval = hrv = 0
+
+        features = {
+            "statistical": {
+                "mean": mean_val,
+                "std": std_val,
+                "rms": rms_val,
+                "peak_to_peak": peak_to_peak,
+                "crest_factor": crest_factor,
+                "shape_factor": shape_factor,
+                "impulse_factor": impulse_factor,
+                "margin_factor": margin_factor,
+            },
+            "timing": {
+                "num_peaks": len(peaks),
+                "mean_peak_interval": mean_interval,
+                "std_peak_interval": std_interval,
+                "estimated_hr": hrv,
+            },
+            "signal_quality": {
+                "snr_estimate": 20 * np.log10(np.max(signal) / std_val) if std_val > 0 else 0,
+                "dynamic_range": np.log10(peak_to_peak / std_val) if std_val > 0 else 0,
+            },
+        }
+
+        return features
+
+    except Exception as e:
+        print(f"ERROR in compute_waveform_features: {e}")
+        return {}

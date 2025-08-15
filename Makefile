@@ -74,7 +74,11 @@ clean:
 
 # Documentation
 docs:
+ifeq ($(OS),Windows_NT)
+	python build_docs.py
+else
 	cd docs && make html
+endif
 
 # Development
 run:

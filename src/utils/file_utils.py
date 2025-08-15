@@ -12,11 +12,21 @@ This module provides functions for efficient file operations including:
 import base64
 import tempfile
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 import pandas as pd
 
+from ..config.settings import settings
+from .exceptions import (
+    FileNotFoundError,
+    FileTooLargeError,
+    InvalidFileFormatError,
+    PPGError,
+)
+from .validation import validate_csv_file, validate_file_path, validate_file_size
 
-def count_rows_quick(path):
+
+def count_rows_quick(path: str) -> int:
     """
     Quickly count rows in a CSV file without loading data into memory.
 
@@ -24,20 +34,33 @@ def count_rows_quick(path):
     much more memory-efficient than loading the entire file for large datasets.
 
     Args:
-        path (str): Path to the CSV file
+        path: Path to the CSV file
 
     Returns:
-        int: Number of data rows (excluding header)
+        Number of data rows (excluding header)
 
-    Note:
-        Returns max(0, total_lines - 1) to account for header row
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        InvalidFileFormatError: If file is not a valid CSV
+        PPGError: For other file reading errors
     """
-    with open(path, "rb") as f:
-        total_lines = sum(1 for _ in f)
-    return max(0, total_lines - 1)
+    try:
+        # Validate file path and format
+        file_path = validate_file_path(path)
+        validate_csv_file(file_path)
+
+        with open(file_path, "rb") as f:
+            total_lines = sum(1 for _ in f)
+
+        return max(0, total_lines - 1)  # Account for header row
+
+    except (FileNotFoundError, InvalidFileFormatError):
+        raise
+    except Exception as e:
+        raise PPGError(f"Failed to count rows in file: {e}", details={"path": path}) from e
 
 
-def get_columns_only(path):
+def get_columns_only(path: str) -> List[str]:
     """
     Get column names from a CSV file without loading data.
 
@@ -45,15 +68,32 @@ def get_columns_only(path):
     making it efficient for large files where only column information is needed.
 
     Args:
-        path (str): Path to the CSV file
+        path: Path to the CSV file
 
     Returns:
-        list: List of column names as strings
+        List of column names as strings
+
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        InvalidFileFormatError: If file is not a valid CSV
+        PPGError: For other file reading errors
     """
-    return list(pd.read_csv(path, nrows=0).columns)
+    try:
+        # Validate file path and format
+        file_path = validate_file_path(path)
+        validate_csv_file(file_path)
+
+        # Read only header row
+        df_header = pd.read_csv(file_path, nrows=0)
+        return list(df_header.columns)
+
+    except (FileNotFoundError, InvalidFileFormatError):
+        raise
+    except Exception as e:
+        raise PPGError(f"Failed to read columns from file: {e}", details={"path": path}) from e
 
 
-def parse_uploaded_csv_to_temp(contents, filename):
+def parse_uploaded_csv_to_temp(contents: str, filename: str) -> str:
     """
     Parse uploaded CSV content and save to temporary file.
 
@@ -62,35 +102,45 @@ def parse_uploaded_csv_to_temp(contents, filename):
     is automatically cleaned up by the system.
 
     Args:
-        contents (str): Base64 encoded CSV content with data URL prefix
-        filename (str): Original filename for determining file extension
+        contents: Base64 encoded CSV content with data URL prefix
+        filename: Original filename for determining file extension
 
     Returns:
-        str: Path to the temporary file, or None if contents is empty
+        Path to the temporary file
 
-    Note:
-        The temporary file will have a prefix "ppg_" and appropriate suffix
-        based on the original filename extension.
+    Raises:
+        InvalidParameterError: If contents is empty or invalid
+        PPGError: For other processing errors
     """
     if not contents:
-        return None
+        raise ValueError("Upload contents cannot be empty")
 
-    # Parse base64 content and decode
-    content_type, content_string = contents.split(",")
-    decoded = base64.b64decode(content_string)
+    try:
+        # Parse base64 content and decode
+        if "," not in contents:
+            raise ValueError("Invalid upload content format")
 
-    # Determine file extension
-    suffix = ".csv" if not filename else f".{filename.split('.')[-1]}"
+        content_type, content_string = contents.split(",", 1)
+        decoded = base64.b64decode(content_string)
 
-    # Create temporary file
-    fd, tmp_path = tempfile.mkstemp(prefix="ppg_", suffix=suffix)
-    with open(tmp_path, "wb") as f:
-        f.write(decoded)
+        # Determine file extension
+        suffix = ".csv" if not filename else f".{filename.split('.')[-1]}"
+        if suffix.lower() != ".csv":
+            suffix = ".csv"  # Force CSV extension for safety
 
-    return tmp_path
+        # Create temporary file with configured prefix
+        fd, tmp_path = tempfile.mkstemp(prefix=settings.temp_file_prefix, suffix=suffix)
+
+        with open(tmp_path, "wb") as f:
+            f.write(decoded)
+
+        return tmp_path
+
+    except Exception as e:
+        raise PPGError(f"Failed to parse uploaded CSV: {e}") from e
 
 
-def read_window(path, cols, start_row, end_row):
+def read_window(path: str, cols: List[str], start_row: int, end_row: int) -> pd.DataFrame:
     """
     Read a specific window of rows from a CSV file.
 
@@ -98,72 +148,142 @@ def read_window(path, cols, start_row, end_row):
     making it suitable for handling datasets that don't fit in memory.
 
     Args:
-        path (str): Path to the CSV file
-        cols (list): List of column names to read
-        start_row (int): Starting row index (0-based, excluding header)
-        end_row (int): Ending row index (inclusive, excluding header)
+        path: Path to the CSV file
+        cols: List of column names to read
+        start_row: Starting row index (0-based)
+        end_row: Ending row index (exclusive)
 
     Returns:
-        pandas.DataFrame: DataFrame containing the specified window of data
+        DataFrame containing the specified window of data
 
-    Note:
-        - Row indices are 0-based but exclude the header row
-        - The function automatically handles header skipping
-        - Returns empty DataFrame if start_row > end_row
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        InvalidFileFormatError: If file is not a valid CSV
+        PPGError: For other file reading errors
     """
-    start_row = max(0, int(start_row))
-    end_row = max(start_row, int(end_row))
-    nrows = end_row - start_row + 1
+    try:
+        # Validate file path and format
+        file_path = validate_file_path(path)
+        validate_csv_file(file_path)
 
-    # Skip header and rows before start_row
-    skip = range(1, 1 + start_row) if start_row > 0 else None
+        # Validate window parameters
+        if start_row < 0 or end_row <= start_row:
+            raise ValueError("Invalid window parameters: start_row < 0 or end_row <= start_row")
 
-    return pd.read_csv(path, usecols=cols, skiprows=skip, nrows=nrows)
+        # Read the specified window
+        df = pd.read_csv(
+            file_path,
+            usecols=cols,
+            skiprows=range(1, start_row + 1),  # Skip header + rows before start
+            nrows=end_row - start_row,
+        )
+
+        return df
+
+    except (FileNotFoundError, InvalidFileFormatError):
+        raise
+    except Exception as e:
+        raise PPGError(
+            f"Failed to read data window: {e}",
+            details={"path": path, "start_row": start_row, "end_row": end_row},
+        ) from e
 
 
-def get_auto_file_path(default_filename):
+def get_auto_file_path(filename: str) -> Optional[str]:
     """
-    Get auto-file path if it exists in the current directory.
-
-    This function checks if a default file exists and returns its resolved path.
-    Useful for automatically loading common data files without user intervention.
+    Automatically detect and return the path to a file in the current directory.
 
     Args:
-        default_filename (str): Default filename to look for
+        filename: Name of the file to look for
 
     Returns:
-        str: Resolved absolute path to the file if it exists, None otherwise
+        Full path to the file if found, None otherwise
     """
-    path = Path(default_filename)
-    if path.exists():
-        return str(path.resolve())
-    return None
+    try:
+        # Look in current directory
+        current_dir = Path.cwd()
+        file_path = current_dir / filename
+
+        if file_path.exists():
+            return str(file_path.resolve())
+
+        # Look in parent directories (up to 3 levels)
+        for parent in current_dir.parents[:3]:
+            file_path = parent / filename
+            if file_path.exists():
+                return str(file_path.resolve())
+
+        return None
+
+    except Exception:
+        return None
 
 
-def get_default_sample_data_path():
+def get_default_sample_data_path() -> Optional[str]:
     """
     Get the path to the default sample data file.
 
-    This function returns the path to the toy_PPG_data.csv file in the sample_data
-    directory, which serves as a default dataset for users to explore the tool.
-
     Returns:
-        str: Resolved absolute path to sample_data/toy_PPG_data.csv if it exists, None otherwise
+        Path to the sample data file if it exists, None otherwise
     """
-    # Try to find the sample data file
-    sample_path = Path("sample_data/toy_PPG_data.csv")
-    if sample_path.exists():
-        return str(sample_path.resolve())
+    try:
+        from ..config.settings import DEFAULT_SAMPLE_DATA_PATH
 
-    # Fallback: try relative to current working directory
-    sample_path = Path.cwd() / "sample_data" / "toy_PPG_data.csv"
-    if sample_path.exists():
-        return str(sample_path.resolve())
+        if DEFAULT_SAMPLE_DATA_PATH.exists():
+            return str(DEFAULT_SAMPLE_DATA_PATH.resolve())
 
-    # Fallback: try relative to the script location
-    script_dir = Path(__file__).parent.parent.parent
-    sample_path = script_dir / "sample_data" / "toy_PPG_data.csv"
-    if sample_path.exists():
-        return str(sample_path.resolve())
+        return None
 
-    return None
+    except Exception:
+        return None
+
+
+def validate_upload_file_size(contents: str, max_size_mb: int) -> None:
+    """
+    Validate that uploaded file content doesn't exceed size limits.
+
+    Args:
+        contents: Base64 encoded file content
+        max_size_mb: Maximum file size in MB
+
+    Raises:
+        FileTooLargeError: If file exceeds size limit
+    """
+    try:
+        if "," in contents:
+            content_string = contents.split(",", 1)[1]
+        else:
+            content_string = contents
+
+        # Estimate file size from base64 content
+        decoded_size = len(base64.b64decode(content_string))
+        file_size_mb = decoded_size / (1024 * 1024)
+
+        if file_size_mb > max_size_mb:
+            raise FileTooLargeError(
+                f"Uploaded file size ({file_size_mb:.1f}MB) exceeds limit ({max_size_mb}MB)"
+            )
+
+    except Exception as e:
+        if isinstance(e, FileTooLargeError):
+            raise
+        raise PPGError(f"Failed to validate file size: {e}") from e
+
+
+def cleanup_temp_file(file_path: str) -> None:
+    """
+    Clean up a temporary file.
+
+    Args:
+        file_path: Path to the temporary file to remove
+
+    Note:
+        This function safely removes temporary files and handles errors gracefully.
+    """
+    try:
+        temp_path = Path(file_path)
+        if temp_path.exists() and temp_path.is_file():
+            temp_path.unlink()
+    except Exception:
+        # Ignore cleanup errors to avoid masking other issues
+        pass
