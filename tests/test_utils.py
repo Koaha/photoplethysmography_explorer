@@ -113,18 +113,39 @@ class TestSignalProcessing(unittest.TestCase):
 
     def test_cross_correlation_lag(self):
         """Test cross-correlation."""
-        # Create test signals
+        # Create test signals with a clear delay - use a simpler approach
         t = np.linspace(0, 1, 1000)
-        x = np.sin(2 * np.pi * 10 * t)
-        y = np.roll(x, 50)  # Shifted by 50 samples
+        x = np.sin(2 * np.pi * 10 * t) + 0.1 * np.random.randn(1000)
 
-        lags, corr, best_lag = cross_correlation_lag(x, y, 1000, max_lag_sec=0.1)
+        # Create a delayed version by shifting the array
+        delay_samples = 50
+        y = np.zeros_like(x)
+        y[delay_samples:] = x[:-delay_samples]  # Shift by 50 samples
+
+        lags, correlation, max_corr_lag = cross_correlation_lag(x, y, max_lag=100)
         self.assertIsNotNone(lags)
-        self.assertIsNotNone(corr)
-        self.assertIsNotNone(best_lag)
-        # Allow for some tolerance in lag detection, and handle sign ambiguity
-        # The lag can be positive or negative depending on correlation direction
-        self.assertAlmostEqual(abs(best_lag), 0.05, places=1)  # 50 samples / 1000 Hz = 0.05s
+        self.assertIsNotNone(correlation)
+        self.assertIsNotNone(max_corr_lag)
+
+        print(f"DEBUG: max_corr_lag = {max_corr_lag}, expected around {delay_samples}")
+
+        # The lag should be close to the delay we created
+        # Allow for some tolerance due to noise and correlation detection
+        expected_lag = delay_samples
+        tolerance = 20  # Allow more tolerance for this test
+
+        # Check if the detected lag is within tolerance of expected
+        lag_diff = abs(abs(max_corr_lag) - expected_lag)
+        self.assertLessEqual(
+            lag_diff, tolerance, f"Expected lag close to {expected_lag}, got {max_corr_lag}"
+        )
+
+        # Verify that the correlation at the detected lag is indeed high
+        lag_idx = np.where(lags == max_corr_lag)[0]
+        if len(lag_idx) > 0:
+            corr_at_lag = correlation[lag_idx[0]]
+            # The correlation should be reasonably high
+            self.assertGreater(abs(corr_at_lag), 0.3)
 
 
 class TestFileUtils(unittest.TestCase):
@@ -169,12 +190,13 @@ class TestFileUtils(unittest.TestCase):
         """Test CSV parsing from upload."""
         # Create a proper base64-encoded content string as expected by the function
         import base64
+
         csv_content = "time,red,ir\n0.0,1000,800\n0.01,1001,801\n"
         base64_content = base64.b64encode(csv_content.encode()).decode()
         data_url = f"data:text/csv;base64,{base64_content}"
-        
+
         result = parse_uploaded_csv_to_temp(data_url, "test.csv")
-        
+
         # The function returns a single path string
         temp_path = result
 

@@ -30,6 +30,7 @@ def create_layout():
             dcc.Store(id="store_window"),  # {"start": int, "end": int}
             dcc.Store(id="store_theme", data="dark"),
             dcc.Store(id="store_prev_total_rows"),
+            dcc.Store(id="store_initial_load", data=True),  # Triggers initial data loading
             html.Div(
                 className="header",
                 children=[
@@ -108,6 +109,24 @@ def _create_left_panel():
                             "IR",
                             dcc.Dropdown(
                                 id="ir_col", options=[], value=None, style={"width": "280px"}
+                            ),
+                        ]
+                    ),
+                ],
+            ),
+            html.Div(
+                className="row",
+                style={"marginTop": "6px"},
+                children=[
+                    html.Div(
+                        children=[
+                            "Waveform",
+                            dcc.Dropdown(
+                                id="waveform_col",
+                                options=[],
+                                value=None,
+                                placeholder="PLETH",
+                                style={"width": "280px"},
                             ),
                         ]
                     ),
@@ -237,11 +256,11 @@ def _create_middle_panel():
                                         className="section-title", children="Time-domain (bigger)"
                                     ),
                                     dcc.Loading(
-                                        dcc.Graph(id="fig_raw", style={"height": "420px"}),
+                                        dcc.Graph(id="fig_raw", style={"height": "600px"}),
                                         type="default",
                                     ),
                                     dcc.Loading(
-                                        dcc.Graph(id="fig_ac", style={"height": "420px"}),
+                                        dcc.Graph(id="fig_ac", style={"height": "600px"}),
                                         type="default",
                                     ),
                                 ],
@@ -391,6 +410,97 @@ def _create_middle_panel():
                                                 ],
                                             ),
                                         ],
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    dcc.Tab(
+                        label="Waveform Analysis",
+                        value="waveform",
+                        children=[
+                            html.Div(
+                                className="card",
+                                children=[
+                                    html.Div(
+                                        className="section-title", children="Waveform Analysis"
+                                    ),
+                                    html.Div(
+                                        className="row",
+                                        children=[
+                                            html.Div(
+                                                children=[
+                                                    html.Div("Waveform Type"),
+                                                    dcc.Dropdown(
+                                                        id="waveform_type",
+                                                        options=[
+                                                            {"label": "Raw Signal", "value": "raw"},
+                                                            {
+                                                                "label": "Filtered Signal",
+                                                                "value": "filtered",
+                                                            },
+                                                            {
+                                                                "label": "Normalized",
+                                                                "value": "normalized",
+                                                            },
+                                                            {
+                                                                "label": "Derivative",
+                                                                "value": "derivative",
+                                                            },
+                                                        ],
+                                                        value="raw",
+                                                        clearable=False,
+                                                        style={"width": "160px"},
+                                                    ),
+                                                ]
+                                            ),
+                                            html.Div(
+                                                children=[
+                                                    html.Div("Window Size (s)"),
+                                                    dcc.Input(
+                                                        id="waveform_window",
+                                                        type="number",
+                                                        value=5.0,
+                                                        min=1.0,
+                                                        max=30.0,
+                                                        step=0.5,
+                                                        style={"width": "100px"},
+                                                    ),
+                                                ]
+                                            ),
+                                            html.Div(
+                                                children=[
+                                                    html.Div("Show Annotations"),
+                                                    dcc.Checklist(
+                                                        id="show_waveform_annotations",
+                                                        options=[
+                                                            {"label": "Peaks", "value": "peaks"},
+                                                            {
+                                                                "label": "Valleys",
+                                                                "value": "valleys",
+                                                            },
+                                                            {
+                                                                "label": "Zero Crossings",
+                                                                "value": "zero_crossings",
+                                                            },
+                                                        ],
+                                                        value=["peaks"],
+                                                        style={"margin": "6px 0"},
+                                                    ),
+                                                ]
+                                            ),
+                                        ],
+                                        style={"margin": "6px 0"},
+                                    ),
+                                    dcc.Loading(
+                                        dcc.Graph(id="fig_waveform", style={"height": "400px"}),
+                                        type="default",
+                                    ),
+                                    dcc.Loading(
+                                        dcc.Graph(
+                                            id="fig_waveform_stats", style={"height": "300px"}
+                                        ),
+                                        type="default",
                                     ),
                                 ],
                             ),

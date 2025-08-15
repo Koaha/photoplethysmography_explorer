@@ -101,12 +101,26 @@ class PlotManager:
         return fig
 
     def create_time_domain_plots(
-        self, t, red, ir, red_ac, ir_ac, red_col, ir_col, family, resp, order, n
+        self,
+        t,
+        red,
+        ir,
+        waveform,
+        red_ac,
+        ir_ac,
+        waveform_ac,
+        red_col,
+        ir_col,
+        waveform_col,
+        family,
+        resp,
+        order,
+        n,
     ):
         """
         Generate time-domain plots for raw and filtered signals.
 
-        This method creates two subplots: one for raw signals and one for filtered
+        This method creates three subplots: one for raw signals and one for filtered
         (AC component) signals. It applies automatic decimation to ensure plots
         remain responsive with large datasets.
 
@@ -114,10 +128,13 @@ class PlotManager:
             t (np.ndarray): Time array in seconds
             red (np.ndarray): Raw red channel signal
             ir (np.ndarray): Raw infrared channel signal
+            waveform (np.ndarray): Raw waveform signal
             red_ac (np.ndarray): Filtered red channel AC component
             ir_ac (np.ndarray): Filtered infrared channel AC component
+            waveform_ac (np.ndarray): Filtered waveform AC component
             red_col (str): Name of the red channel column
             ir_col (str): Name of the infrared channel column
+            waveform_col (str): Name of the waveform column
             family (str): Filter family used (e.g., 'butter', 'cheby1')
             resp (str): Filter response type (e.g., 'lowpass', 'bandpass')
             order (int): Filter order
@@ -127,66 +144,97 @@ class PlotManager:
             tuple: (fig_raw, fig_ac) - Raw and filtered signal plots
         """
         # Apply automatic decimation for display performance
-        decim_eff = auto_decimation(n, 1, traces=8, cap=MAX_DISPLAY_POINTS)
+        decim_eff = auto_decimation(n, 1, traces=12, cap=MAX_DISPLAY_POINTS)
         td = t[::decim_eff]
-        red_d, ir_d = red[::decim_eff], ir[::decim_eff]
-        red_ad, ir_ad = red_ac[::decim_eff], ir_ac[::decim_eff]
+        red_d, ir_d, waveform_d = red[::decim_eff], ir[::decim_eff], waveform[::decim_eff]
+        red_ad, ir_ad, waveform_ad = (
+            red_ac[::decim_eff],
+            ir_ac[::decim_eff],
+            waveform_ac[::decim_eff],
+        )
 
         # Create raw and filtered signal plots
-        fig_raw = self._create_raw_plot(td, red_d, ir_d, red_col, ir_col, n, decim_eff)
+        fig_raw = self._create_raw_plot(
+            td, red_d, ir_d, waveform_d, red_col, ir_col, waveform_col, n, decim_eff
+        )
         fig_ac = self._create_filtered_plot(
-            td, red_ad, ir_ad, red_col, ir_col, family, resp, order, decim_eff
+            td,
+            red_ad,
+            ir_ad,
+            waveform_ad,
+            red_col,
+            ir_col,
+            waveform_col,
+            family,
+            resp,
+            order,
+            decim_eff,
         )
 
         return fig_raw, fig_ac
 
-    def _create_raw_plot(self, t, red, ir, red_col, ir_col, n, decim_eff):
+    def _create_raw_plot(self, t, red, ir, waveform, red_col, ir_col, waveform_col, n, decim_eff):
         """
-        Create raw signal plot with dual subplots.
+        Create raw signal plot with three subplots.
 
         Args:
             t (np.ndarray): Decimated time array
             red (np.ndarray): Decimated red channel signal
             ir (np.ndarray): Decimated infrared channel signal
+            waveform (np.ndarray): Decimated waveform signal
             red_col (str): Red channel column name
             ir_col (str): Infrared channel column name
+            waveform_col (str): Waveform column name
             n (int): Total data points
             decim_eff (int): Effective decimation factor
 
         Returns:
-            plotly.graph_objects.Figure: Raw signal plot with dual subplots
+            plotly.graph_objects.Figure: Raw signal plot with three subplots
         """
-        # Create subplots for red and infrared channels
+        # Create subplots for red, infrared, and waveform channels
         fig = make_subplots(
-            rows=2,
+            rows=3,
             cols=1,
             shared_xaxes=True,
-            vertical_spacing=0.07,
-            subplot_titles=(f"Raw {red_col}", f"Raw {ir_col}"),
+            vertical_spacing=0.05,
+            subplot_titles=(f"Raw {red_col}", f"Raw {ir_col}", f"Raw {waveform_col}"),
         )
 
-        # Add traces for both channels
+        # Add traces for all three channels
         fig.add_trace(go.Scatter(x=t, y=red, name=f"Raw {red_col}", mode="lines"), 1, 1)
         fig.add_trace(go.Scatter(x=t, y=ir, name=f"Raw {ir_col}", mode="lines"), 2, 1)
+        fig.add_trace(go.Scatter(x=t, y=waveform, name=f"Raw {waveform_col}", mode="lines"), 3, 1)
 
         # Configure axes labels and rangeslider
-        fig.update_xaxes(title_text="Time (s)", row=2, col=1, rangeslider={"visible": True})
+        fig.update_xaxes(title_text="Time (s)", row=3, col=1, rangeslider={"visible": True})
         fig.update_yaxes(title_text="ADC", row=1, col=1)
         fig.update_yaxes(title_text="ADC", row=2, col=1)
+        fig.update_yaxes(title_text="ADC", row=3, col=1)
 
         # Apply layout styling
         fig.update_layout(
             template=self.template,
             title=f"Raw ({n:,} rows, decim×{decim_eff})",
             hovermode="x unified",
-            height=420,
+            height=600,  # Increased height for three subplots
             **self.colors,
         )
 
         return fig
 
     def _create_filtered_plot(
-        self, t, red_ac, ir_ac, red_col, ir_col, family, resp, order, decim_eff
+        self,
+        t,
+        red_ac,
+        ir_ac,
+        waveform_ac,
+        red_col,
+        ir_col,
+        waveform_col,
+        family,
+        resp,
+        order,
+        decim_eff,
     ):
         """
         Create filtered signal plot showing AC components.
@@ -195,43 +243,48 @@ class PlotManager:
             t (np.ndarray): Decimated time array
             red_ac (np.ndarray): Decimated red channel AC component
             ir_ac (np.ndarray): Decimated infrared channel AC component
+            waveform_ac (np.ndarray): Decimated waveform AC component
             red_col (str): Red channel column name
             ir_col (str): Infrared channel column name
+            waveform_col (str): Waveform column name
             family (str): Filter family used
             resp (str): Filter response type
             order (int): Filter order
             decim_eff (int): Effective decimation factor
 
         Returns:
-            plotly.graph_objects.Figure: Filtered signal plot with dual subplots
+            plotly.graph_objects.Figure: Filtered signal plot with three subplots
         """
-        # Create subplots for filtered red and infrared channels
+        # Create subplots for filtered red, infrared, and waveform channels
         fig = make_subplots(
-            rows=2,
+            rows=3,
             cols=1,
             shared_xaxes=True,
-            vertical_spacing=0.07,
+            vertical_spacing=0.05,
             subplot_titles=(
                 f"Filtered {red_col} ({family},{resp})",
                 f"Filtered {ir_col} ({family},{resp})",
+                f"Filtered {waveform_col} ({family},{resp})",
             ),
         )
 
         # Add traces for filtered AC components
         fig.add_trace(go.Scatter(x=t, y=red_ac, name=f"AC {red_col}", mode="lines"), 1, 1)
         fig.add_trace(go.Scatter(x=t, y=ir_ac, name=f"AC {ir_col}", mode="lines"), 2, 1)
+        fig.add_trace(go.Scatter(x=t, y=waveform_ac, name=f"AC {waveform_col}", mode="lines"), 3, 1)
 
         # Configure axes labels
-        fig.update_xaxes(title_text="Time (s)", row=2, col=1)
+        fig.update_xaxes(title_text="Time (s)", row=3, col=1)
         fig.update_yaxes(title_text="AC Component", row=1, col=1)
         fig.update_yaxes(title_text="AC Component", row=2, col=1)
+        fig.update_yaxes(title_text="AC Component", row=3, col=1)
 
         # Apply layout styling
         fig.update_layout(
             template=self.template,
             title=f"Filtered AC ({family} {resp}, order {order})",
             hovermode="x unified",
-            height=420,
+            height=600,  # Increased height for three subplots
             **self.colors,
         )
 
@@ -497,14 +550,14 @@ class PlotManager:
             return self.create_blank_figure(280)
 
         # Calculate cross-correlation
-        lags_s, corr, best_lag = cross_correlation_lag(red_ac, ir_ac, fs, max_lag_sec=1.0)
-        if lags_s is None:
+        lags, correlation, max_corr_lag = cross_correlation_lag(red_ac, ir_ac, max_lag=1.0)
+        if lags is None:
             return self.create_blank_figure(280)
 
         # Create cross-correlation visualization
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=lags_s, y=corr, mode="lines", name="xcorr"))
-        fig.add_vline(x=best_lag, line_dash="dash")
+        fig.add_trace(go.Scatter(x=lags, y=correlation, mode="lines", name="xcorr"))
+        fig.add_vline(x=max_corr_lag, line_dash="dash")
 
         # Configure axes labels
         fig.update_xaxes(title_text="Lag (s) [positive = RED leads IR]")
@@ -752,6 +805,174 @@ class PlotManager:
 
         return fig
 
+    def create_waveform_plot(
+        self, t, signal, signal_type, annotations, peaks=None, valleys=None, zero_crossings=None
+    ):
+        """
+        Create waveform analysis plot with annotations.
+
+        Args:
+            t (np.ndarray): Time array
+            signal (np.ndarray): Signal data
+            signal_type (str): Type of signal ('raw', 'filtered', 'normalized', 'derivative')
+            annotations (list): List of annotation types to show
+            peaks (dict, optional): Peak information
+            valleys (dict, optional): Valley information
+            zero_crossings (dict, optional): Zero crossing information
+
+        Returns:
+            plotly.graph_objects.Figure: Waveform plot with annotations
+        """
+        fig = go.Figure()
+
+        # Add main signal trace
+        fig.add_trace(
+            go.Scatter(
+                x=t,
+                y=signal,
+                mode="lines",
+                name=f"{signal_type.title()} Signal",
+                line=dict(color="#1f77b4", width=1.5),
+                hovertemplate="Time: %{x:.3f}s<br>Value: %{y:.2f}<extra></extra>",
+            )
+        )
+
+        # Add peak annotations
+        if peaks and "peaks" in annotations:
+            fig.add_trace(
+                go.Scatter(
+                    x=peaks["times"],
+                    y=peaks["values"],
+                    mode="markers",
+                    name="Peaks",
+                    marker=dict(
+                        symbol="triangle-up",
+                        size=8,
+                        color="red",
+                        line=dict(width=1, color="darkred"),
+                    ),
+                    hovertemplate="Peak<br>Time: %{x:.3f}s<br>Value: %{y:.2f}<extra></extra>",
+                )
+            )
+
+        # Add valley annotations
+        if valleys and "valleys" in annotations:
+            fig.add_trace(
+                go.Scatter(
+                    x=valleys["times"],
+                    y=valleys["values"],
+                    mode="markers",
+                    name="Valleys",
+                    marker=dict(
+                        symbol="triangle-down",
+                        size=8,
+                        color="blue",
+                        line=dict(width=1, color="darkblue"),
+                    ),
+                    hovertemplate="Valley<br>Time: %{x:.3f}s<br>Value: %{y:.2f}<extra></extra>",
+                )
+            )
+
+        # Add zero crossing annotations
+        if zero_crossings and "zero_crossings" in annotations:
+            fig.add_trace(
+                go.Scatter(
+                    x=zero_crossings["times"],
+                    y=np.zeros_like(zero_crossings["times"]),
+                    mode="markers",
+                    name="Zero Crossings",
+                    marker=dict(
+                        symbol="circle",
+                        size=6,
+                        color="green",
+                        line=dict(width=1, color="darkgreen"),
+                    ),
+                    hovertemplate="Zero Crossing<br>Time: %{x:.3f}s<extra></extra>",
+                )
+            )
+
+        # Update layout
+        fig.update_layout(
+            template=self.template,
+            title=f"Waveform Analysis: {signal_type.title()} Signal",
+            xaxis_title="Time (s)",
+            yaxis_title="Amplitude",
+            hovermode="x unified",
+            height=400,
+            showlegend=True,
+            **self.colors,
+        )
+
+        return fig
+
+    def create_waveform_stats_plot(self, features):
+        """
+        Create waveform statistics plot showing key metrics.
+
+        Args:
+            features (dict): Dictionary containing waveform statistics
+
+        Returns:
+            plotly.graph_objects.Figure: Statistics plot
+        """
+        fig = go.Figure()
+
+        # Create a bar chart of key statistics
+        if features:
+            # Extract key metrics
+            metrics = [
+                "mean",
+                "rms",
+                "peak_to_peak",
+                "crest_factor",
+                "shape_factor",
+                "impulse_factor",
+            ]
+            values = [features.get(metric, 0) for metric in metrics]
+            labels = [metric.replace("_", " ").title() for metric in metrics]
+
+            # Create bar chart
+            fig.add_trace(
+                go.Bar(
+                    x=labels,
+                    y=values,
+                    marker_color="#1f77b4",
+                    hovertemplate="%{x}<br>%{y:.3f}<extra></extra>",
+                )
+            )
+
+            # Add horizontal line for mean value
+            if "mean" in features:
+                fig.add_hline(
+                    y=features["mean"],
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text="Mean",
+                    annotation_position="top right",
+                )
+        else:
+            # No features available
+            fig.add_annotation(
+                text="No waveform features available",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+            )
+
+        # Update layout
+        fig.update_layout(
+            template=self.template,
+            title="Waveform Statistics",
+            xaxis_title="Metric",
+            yaxis_title="Value",
+            height=300,
+            **self.colors,
+        )
+
+        return fig
+
 
 class DataProcessor:
     """
@@ -769,6 +990,7 @@ class DataProcessor:
         window,
         red_col,
         ir_col,
+        waveform_col,
         fs,
         decim_user,
         family,
@@ -792,6 +1014,7 @@ class DataProcessor:
             window (dict): Dictionary containing 'start' and 'end' indices
             red_col (str): Name of the red channel column
             ir_col (str): Name of the infrared channel column
+            waveform_col (str): Name of the waveform column
             fs (float): Sampling frequency in Hz
             decim_user (int): User-specified decimation factor
             family (str): Filter family (e.g., 'butter', 'cheby1')
@@ -800,26 +1023,27 @@ class DataProcessor:
             rp (float): Passband ripple in dB
             rs (float): Stopband attenuation in dB
             notch_enable (list): List of 'on' to enable notch filter
-            notch_hz (float): Notch filter center frequency in Hz
+            notch_hz (float): Notch filter center frequency
             notch_q (float): Notch filter quality factor
             flags (list): List of flags for filtering (e.g., 'invert', 'detrend')
 
         Returns:
-            tuple: (t, red, ir, red_ac, ir_ac, filt_err) - Time array, raw signals,
+            tuple: (t, red, ir, waveform, red_ac, ir_ac, waveform_ac, filt_err) - Time array, raw signals,
                    filtered signals, and error message
         """
-        if not path or not window or red_col is None or ir_col is None:
-            return None, None, None, None, None, None
+        if not path or not window or red_col is None or ir_col is None or waveform_col is None:
+            return None, None, None, None, None, None, None, None
 
         try:
             start, end = int(window["start"]), int(window["end"])
-            df = read_window(path, [red_col, ir_col], start, end).dropna()
+            df = read_window(path, [red_col, ir_col, waveform_col], start, end).dropna()
 
             if df.empty:
-                return None, None, None, None, None, None
+                return None, None, None, None, None, None, None, None
 
             red = df[red_col].astype(float).to_numpy()
             ir = df[ir_col].astype(float).to_numpy()
+            waveform = df[waveform_col].astype(float).to_numpy()
             n = len(df)
             t = np.arange(n) / fs
 
@@ -841,16 +1065,21 @@ class DataProcessor:
                     red, fs, base_sos, notch_on, notch_hz, notch_q, detrend, invert
                 )
                 ir_ac = apply_chain(ir, fs, base_sos, notch_on, notch_hz, notch_q, detrend, invert)
+                # Waveform is not inverted (as per user request)
+                waveform_ac = apply_chain(
+                    waveform, fs, base_sos, notch_on, notch_hz, notch_q, detrend, False
+                )
                 filt_err = None
             except Exception as e:
                 red_ac = np.zeros_like(red)
                 ir_ac = np.zeros_like(ir)
+                waveform_ac = np.zeros_like(waveform)
                 filt_err = str(e)
 
-            return t, red, ir, red_ac, ir_ac, filt_err
+            return t, red, ir, waveform, red_ac, ir_ac, waveform_ac, filt_err
 
         except Exception as e:
-            return None, None, None, None, None, str(e)
+            return None, None, None, None, None, None, None, str(e)
 
 
 class InsightGenerator:
@@ -1021,11 +1250,14 @@ def register_plot_callbacks(app):
         Output("fig_liss", "figure"),
         Output("fig_avgbeat", "figure"),
         Output("fig_sdppg", "figure"),
+        Output("fig_waveform", "figure"),
+        Output("fig_waveform_stats", "figure"),
         Input("store_file_path", "data"),
         Input("store_total_rows", "data"),
         Input("store_window", "data"),
         Input("red_col", "value"),
         Input("ir_col", "value"),
+        Input("waveform_col", "value"),
         Input("fs", "value"),
         Input("decim", "value"),
         Input("family", "value"),
@@ -1052,6 +1284,9 @@ def register_plot_callbacks(app):
         Input("dual_source_tabs", "value"),
         Input("dynamics_tabs", "value"),
         Input("main_charts_tabs", "value"),
+        Input("waveform_type", "value"),
+        Input("waveform_window", "value"),
+        Input("show_waveform_annotations", "value"),
         prevent_initial_call=False,
     )
     def update_plots(
@@ -1060,6 +1295,7 @@ def register_plot_callbacks(app):
         window,
         red_col,
         ir_col,
+        waveform_col,
         fs,
         decim_user,
         family,
@@ -1086,6 +1322,9 @@ def register_plot_callbacks(app):
         dual_source_tab,
         dynamics_tab,
         main_tab,
+        waveform_type,
+        waveform_window,
+        show_waveform_annotations,
     ):
         """
         Update all plots based on current data and settings.
@@ -1125,6 +1364,9 @@ def register_plot_callbacks(app):
             dual_source_tab (str): Current tab for dual-source analytics
             dynamics_tab (str): Current tab for dynamics plots
             main_tab (str): Current main tab
+            waveform_type (str): Type of signal for waveform analysis
+            waveform_window (float): Window duration for waveform analysis
+            show_waveform_annotations (list): List of annotations to show
 
         Returns:
             tuple: A tuple of Output objects for the callback
@@ -1148,11 +1390,12 @@ def register_plot_callbacks(app):
         total = int(total_rows or 0)
 
         # Get processed data
-        t, red, ir, red_ac, ir_ac, filt_err = data_proc.process_data(
+        t, red, ir, waveform, red_ac, ir_ac, waveform_ac, filt_err = data_proc.process_data(
             path,
             window,
             red_col,
             ir_col,
+            waveform_col,
             fs,
             decim_user,
             family,
@@ -1175,6 +1418,7 @@ def register_plot_callbacks(app):
             blank_320 = plot_mgr.create_blank_figure(320)
             blank_300 = plot_mgr.create_blank_figure(300)
             blank_280 = plot_mgr.create_blank_figure(280)
+            blank_400 = plot_mgr.create_blank_figure(400)
 
             msg = [html.Span("Load a CSV and pick columns/window.", className="pill")]
             return (
@@ -1194,12 +1438,27 @@ def register_plot_callbacks(app):
                 blank_300,  # 12–14
                 blank_300,
                 blank_300,  # 15–16
+                blank_400,  # 17
+                blank_300,  # 18
             )
 
         # Generate plots based on selected tabs
         if main_tab == "time_domain":
             fig_raw, fig_ac = plot_mgr.create_time_domain_plots(
-                t, red, ir, red_ac, ir_ac, red_col, ir_col, family, resp, order, len(t)
+                t,
+                red,
+                ir,
+                waveform,
+                red_ac,
+                ir_ac,
+                waveform_ac,
+                red_col,
+                ir_col,
+                waveform_col,
+                family,
+                resp,
+                order,
+                len(t),
             )
         else:
             fig_raw = fig_ac = plot_mgr.create_blank_figure(420)
@@ -1227,11 +1486,58 @@ def register_plot_callbacks(app):
                 plot_mgr.create_dual_source_plots(red, ir, red_ac, ir_ac, fs, t)
             )
         else:
-            fig_rtrend = plot_mgr.create_blank_figure(320)
-            fig_coh = plot_mgr.create_blank_figure(300)
-            fig_liss = plot_mgr.create_blank_figure(300)
-            fig_avgbeat = plot_mgr.create_blank_figure(300)
-            fig_sdppg = plot_mgr.create_blank_figure(300)
+            fig_rtrend = fig_coh = fig_liss = fig_avgbeat = fig_sdppg = (
+                plot_mgr.create_blank_figure(300)
+            )
+
+        # Handle waveform analysis tab
+        if main_tab == "waveform":
+            # Get waveform analysis parameters from callback context
+            waveform_type = waveform_type or "raw"  # Default to raw signal
+            waveform_window = waveform_window or 5.0  # Default 5 second window
+            show_annotations = show_waveform_annotations or ["peaks"]  # Default to showing peaks
+
+            # Analyze the selected signal type
+            if waveform_type == "raw":
+                signal = waveform  # Use waveform channel for analysis
+                signal_name = waveform_col
+            elif waveform_type == "filtered":
+                signal = waveform_ac
+                signal_name = f"{waveform_col} (Filtered)"
+            elif waveform_type == "normalized":
+                signal = (waveform - np.mean(waveform)) / (np.std(waveform) + 1e-12)
+                signal_name = f"{waveform_col} (Normalized)"
+            elif waveform_type == "derivative":
+                signal = np.gradient(waveform)
+                signal_name = f"{waveform_col} (Derivative)"
+            else:
+                signal = waveform
+                signal_name = waveform_col
+
+            # Perform waveform analysis
+            from ..utils.signal_processing import analyze_waveform, compute_waveform_features
+
+            # Analyze waveform with annotations
+            waveform_analysis = analyze_waveform(signal, fs, waveform_window, show_annotations)
+
+            # Compute comprehensive features
+            waveform_features = compute_waveform_features(signal, fs)
+
+            # Create waveform plots
+            fig_waveform = plot_mgr.create_waveform_plot(
+                waveform_analysis["time"],
+                waveform_analysis["signal"],
+                waveform_type,
+                show_annotations,
+                waveform_analysis.get("peaks"),
+                waveform_analysis.get("valleys"),
+                waveform_analysis.get("zero_crossings"),
+            )
+
+            fig_waveform_stats = plot_mgr.create_waveform_stats_plot(waveform_features)
+        else:
+            fig_waveform = plot_mgr.create_blank_figure(400)
+            fig_waveform_stats = plot_mgr.create_blank_figure(300)
 
         # Generate insights and info
         chips = insight_gen.generate_insights(red, ir, red_ac, ir_ac, filt_err, template)
@@ -1282,4 +1588,6 @@ def register_plot_callbacks(app):
             fig_liss,  # 12–14
             fig_avgbeat,
             fig_sdppg,  # 15–16
+            fig_waveform,  # 17
+            fig_waveform_stats,  # 18
         )

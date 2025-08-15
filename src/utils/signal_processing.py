@@ -270,28 +270,182 @@ def auto_decimation(n, decim_user, traces, cap):
     return max(1, d)
 
 
-def cross_correlation_lag(x, y, fs, max_lag_sec=1.0):
-    """Compute cross-correlation between two signals."""
-    n = min(len(x), len(y))
-    if n == 0:
-        return None, None, None
+def cross_correlation_lag(sig1, sig2, max_lag=None):
+    """
+    Compute cross-correlation between two signals and find the lag.
 
-    max_lag = int(max_lag_sec * fs)
-    lags = np.arange(-max_lag, max_lag + 1)
+    Args:
+        sig1 (np.ndarray): First signal
+        sig2 (np.ndarray): Second signal
+        max_lag (int, optional): Maximum lag to compute. Defaults to None.
 
-    # normalize
-    x0 = (x - np.mean(x)) / (np.std(x) + 1e-12)
-    y0 = (y - np.mean(y)) / (np.std(y) + 1e-12)
+    Returns:
+        tuple: (lags, correlation, max_corr_lag)
+    """
+    if max_lag is None:
+        max_lag = min(len(sig1), len(sig2)) // 4
 
-    corr = np.array(
-        [
-            np.correlate(x0[max(0, lag) : n + min(0, lag)], y0[max(0, -lag) : n - min(0, lag)])[0]
-            / (n - abs(lag))
-            for lag in lags
-        ]
+    correlation = np.correlate(sig1, sig2, mode="full")
+    lags = np.arange(-len(sig2) + 1, len(sig1))
+
+    # Find the lag with maximum correlation
+    max_corr_idx = np.argmax(np.abs(correlation))
+    max_corr_lag = lags[max_corr_idx]
+
+    return lags, correlation, max_corr_lag
+
+
+def analyze_waveform(signal, fs, window_s=5.0, annotations=None):
+    """
+    Analyze waveform characteristics including peaks, valleys, and zero crossings.
+
+    Args:
+        signal (np.ndarray): Input signal
+        fs (float): Sampling frequency in Hz
+        window_s (float): Analysis window size in seconds
+        annotations (list): List of annotation types to include ('peaks', 'valleys', 'zero_crossings')
+
+    Returns:
+        dict: Dictionary containing waveform analysis results
+    """
+    if annotations is None:
+        annotations = ["peaks"]
+
+    # Calculate window size in samples
+    window_samples = int(window_s * fs)
+
+    # Ensure window doesn't exceed signal length
+    if window_samples > len(signal):
+        window_samples = len(signal)
+
+    # Analyze the first window
+    signal_window = signal[:window_samples]
+    t_window = np.arange(len(signal_window)) / fs
+
+    results = {
+        "time": t_window,
+        "signal": signal_window,
+        "fs": fs,
+        "window_s": window_s,
+        "window_samples": window_samples,
+    }
+
+    # Peak detection
+    if "peaks" in annotations:
+        peaks, properties = find_peaks(signal_window, prominence=0.1 * np.std(signal_window))
+        results["peaks"] = {
+            "indices": peaks,
+            "times": peaks / fs,
+            "values": signal_window[peaks],
+            "prominences": properties.get("prominences", []),
+        }
+
+    # Valley detection (negative peaks)
+    if "valleys" in annotations:
+        valleys, properties = find_peaks(-signal_window, prominence=0.1 * np.std(signal_window))
+        results["valleys"] = {
+            "indices": valleys,
+            "times": valleys / fs,
+            "values": signal_window[valleys],
+            "prominences": properties.get("prominences", []),
+        }
+
+    # Zero crossings
+    if "zero_crossings" in annotations:
+        zero_crossings = np.where(np.diff(np.signbit(signal_window)))[0]
+        results["zero_crossings"] = {"indices": zero_crossings, "times": zero_crossings / fs}
+
+    # Basic statistics
+    results["statistics"] = {
+        "mean": np.mean(signal_window),
+        "std": np.std(signal_window),
+        "min": np.min(signal_window),
+        "max": np.max(signal_window),
+        "rms": np.sqrt(np.mean(signal_window**2)),
+        "peak_to_peak": np.max(signal_window) - np.min(signal_window),
+        "crest_factor": (
+            np.max(np.abs(signal_window)) / np.sqrt(np.mean(signal_window**2))
+            if np.mean(signal_window**2) > 0
+            else 0
+        ),
+    }
+
+    return results
+
+
+def compute_waveform_features(signal, fs):
+    """
+    Compute comprehensive waveform features for PPG analysis.
+
+    Args:
+        signal (np.ndarray): Input PPG signal
+        fs (float): Sampling frequency in Hz
+
+    Returns:
+        dict: Dictionary containing waveform features
+    """
+    # Basic statistical features
+    mean_val = np.mean(signal)
+    std_val = np.std(signal)
+    rms_val = np.sqrt(np.mean(signal**2))
+
+    # Peak-to-peak amplitude
+    peak_to_peak = np.max(signal) - np.min(signal)
+
+    # Crest factor (peak amplitude / RMS)
+    crest_factor = np.max(np.abs(signal)) / rms_val if rms_val > 0 else 0
+
+    # Shape factor (RMS / mean absolute value)
+    shape_factor = rms_val / np.mean(np.abs(signal)) if np.mean(np.abs(signal)) > 0 else 0
+
+    # Impulse factor (peak amplitude / mean absolute value)
+    impulse_factor = (
+        np.max(np.abs(signal)) / np.mean(np.abs(signal)) if np.mean(np.abs(signal)) > 0 else 0
     )
 
-    best_idx = int(np.argmax(corr))
-    best_lag_s = lags[best_idx] / fs
+    # Margin factor (peak amplitude / mean absolute value of signal above mean)
+    above_mean = signal[signal > mean_val]
+    margin_factor = (
+        np.max(signal) / np.mean(above_mean)
+        if len(above_mean) > 0 and np.mean(above_mean) > 0
+        else 0
+    )
 
-    return lags / fs, corr, best_lag_s
+    # Peak detection for timing features
+    peaks, _ = find_peaks(signal, prominence=0.1 * std_val)
+
+    if len(peaks) > 1:
+        # Inter-peak intervals
+        peak_intervals = np.diff(peaks) / fs
+        mean_interval = np.mean(peak_intervals)
+        std_interval = np.std(peak_intervals)
+
+        # Heart rate variability (if applicable)
+        hrv = 60.0 / mean_interval if mean_interval > 0 else 0
+    else:
+        mean_interval = std_interval = hrv = 0
+
+    features = {
+        "statistical": {
+            "mean": mean_val,
+            "std": std_val,
+            "rms": rms_val,
+            "peak_to_peak": peak_to_peak,
+            "crest_factor": crest_factor,
+            "shape_factor": shape_factor,
+            "impulse_factor": impulse_factor,
+            "margin_factor": margin_factor,
+        },
+        "timing": {
+            "num_peaks": len(peaks),
+            "mean_peak_interval": mean_interval,
+            "std_peak_interval": std_interval,
+            "estimated_hr": hrv,
+        },
+        "signal_quality": {
+            "snr_estimate": 20 * np.log10(np.max(signal) / std_val) if std_val > 0 else 0,
+            "dynamic_range": np.log10(peak_to_peak / std_val) if std_val > 0 else 0,
+        },
+    }
+
+    return features

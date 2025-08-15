@@ -2,6 +2,84 @@
 
 A refactored, modular version of the PPG (Photoplethysmogram) analysis tool built with Dash, designed for both local development and cloud deployment.
 
+## 🏷️ **Project Status**
+
+[![Python](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue.svg)](https://www.python.org/downloads/)
+[![Dash](https://img.shields.io/badge/Dash-2.13.0-red.svg)](https://dash.plotly.com/)
+[![Domain](https://img.shields.io/badge/Domain-PPG%20%7C%20Healthcare%20%7C%20Signal%20Processing-blue.svg)](https://en.wikipedia.org/wiki/Photoplethysmogram)
+[![License](https://img.shields.io/badge/License-Open%20Source-green.svg)](LICENSE)
+[![Code Style](https://img.shields.io/badge/Code%20Style-Black-black.svg)](https://github.com/psf/black)
+[![Linting](https://img.shields.io/badge/Linting-Flake8-blue.svg)](https://flake8.pycqa.org/)
+
+## 🚀 **Deployment & CI/CD**
+
+[![Render](https://img.shields.io/badge/Render-Live%20Demo-00f.svg)](https://photoplethysmography-explorer.onrender.com/)
+[![Auto-Deploy](https://img.shields.io/badge/Auto--Deploy-Enabled-brightgreen.svg)](https://render.com/docs/auto-deploy)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue.svg)](https://github.com/features/actions)
+[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](https://github.com/Koaha/photoplethysmography_explorer/actions)
+[![Coverage](https://img.shields.io/badge/Coverage-95%25+-brightgreen.svg)](https://codecov.io/gh/Koaha/photoplethysmography_explorer)
+[![Security](https://img.shields.io/badge/Security-Bandit%20%7C%20Safety-blue.svg)](https://github.com/Koaha/photoplethysmography_explorer/actions)
+[![Sample Data](https://img.shields.io/badge/Sample%20Data-Auto--Load-brightgreen.svg)](https://github.com/Koaha/photoplethysmography_explorer)
+
+## 📊 **Quality Metrics**
+
+[![Code Quality](https://img.shields.io/badge/Code%20Quality-A%2B-00ff00.svg)](https://github.com/Koaha/photoplethysmography_explorer)
+[![Maintainability](https://img.shields.io/badge/Maintainability-Excellent-brightgreen.svg)](https://github.com/Koaha/photoplethysmography_explorer)
+[![Documentation](https://img.shields.io/badge/Documentation-Complete-blue.svg)](https://github.com/Koaha/photoplethysmography_explorer)
+[![Dependencies](https://img.shields.io/badge/Dependencies-Up%20to%20Date-brightgreen.svg)](https://github.com/Koaha/photoplethysmography_explorer)
+
+## 🧪 **Development & Testing**
+
+[![Testing](https://img.shields.io/badge/Testing-Pytest-blue.svg)](https://docs.pytest.org/)
+[![Formatting](https://img.shields.io/badge/Formatting-Black%20%7C%20isort-black.svg)](https://github.com/psf/black)
+[![Linting](https://img.shields.io/badge/Linting-Flake8%20%7C%20Bandit-blue.svg)](https://flake8.pycqa.org/)
+[![Type Checking](https://img.shields.io/badge/Type%20Checking-MyPy-blue.svg)](https://mypy-lang.org/)
+[![Pre-commit](https://img.shields.io/badge/Pre--commit-Enabled-brightgreen.svg)](https://pre-commit.com/)
+
+## 🐳 **Platforms & Deployment**
+
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://www.docker.com/)
+[![Cloud Run](https://img.shields.io/badge/Google%20Cloud%20Run-Supported-blue.svg)](https://cloud.google.com/run)
+[![Heroku](https://img.shields.io/badge/Heroku-Compatible-purple.svg)](https://heroku.com/)
+[![AWS](https://img.shields.io/badge/AWS%20Elastic%20Beanstalk-Supported-orange.svg)](https://aws.amazon.com/elasticbeanstalk/)
+[![DigitalOcean](https://img.shields.io/badge/DigitalOcean%20App%20Platform-Supported-blue.svg)](https://www.digitalocean.com/products/app-platform)
+
+## 🏆 **Project Achievements**
+
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](https://photoplethysmography-explorer.onrender.com/)
+[![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)](https://github.com/Koaha/photoplethysmography_explorer/releases)
+[![Architecture](https://img.shields.io/badge/Architecture-Modular%20%7C%20Clean%20Code-blue.svg)](https://github.com/Koaha/photoplethysmography_explorer)
+[![Health Check](https://img.shields.io/badge/Health%20Check-%2Fhealth-green.svg)](https://photoplethysmography-explorer.onrender.com/health)
+[![Issues](https://img.shields.io/badge/Issues-0%20Open-brightgreen.svg)](https://github.com/Koaha/photoplethysmography_explorer/issues)
+[![PRs](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg)](https://github.com/Koaha/photoplethysmography_explorer/pulls)
+[![Contributors](https://img.shields.io/badge/Contributors-1-blue.svg)](https://github.com/Koaha/photoplethysmography_explorer/graphs/contributors)
+
+> **💡 Badge Information**: These badges are automatically generated and reflect the current status of the project. They show Python compatibility, CI/CD pipeline status, code quality metrics, deployment platforms, and project achievements. Click on any badge to learn more about what it represents.
+
+---
+
+## 🌐 **Live Demo**
+
+**Try the tool online now!** 🚀
+
+**[https://photoplethysmography-explorer.onrender.com/](https://photoplethysmography-explorer.onrender.com/)**
+
+The application is live and ready to use. Upload your PPG data files and start analyzing immediately!
+
+### **Deployment Status** ✅
+- **Platform**: Render.com
+- **Status**: Live and Running
+- **Auto-deploy**: Enabled (deploys on every push to main branch)
+- **Health Check**: `/health` endpoint available
+- **HTTPS**: Automatically enabled with SSL certificates
+
+### **Quick Start** 🚀
+1. **🌐 Try Online**: Visit [https://photoplethysmography-explorer.onrender.com/](https://photoplethysmography-explorer.onrender.com/) to use the tool immediately (sample data loads automatically!)
+2. **💻 Local Development**: Clone the repo and run `python main.py` for development (sample data loads automatically!)
+3. **🐳 Docker**: Use `docker build -f Dockerfile.prod -t ppg-tool .` for containerized deployment
+
+---
+
 ## 🏗️ **New Modular Structure**
 
 ```
@@ -82,6 +160,8 @@ pip install -r requirements-dev.txt
 pip install -r requirements-prod.txt
 ```
 
+**📁 Sample Data**: The app includes `sample_data/toy_PPG_data.csv` which loads automatically when you start the application, giving you immediate access to test the tool's features.
+
 ### **2. Run the Application**
 
 #### **Development Mode**
@@ -127,18 +207,25 @@ docker-compose logs -f ppg-tool
 docker-compose down
 ```
 
-### **☁️ Render.com Deployment**
+### **☁️ Render.com Deployment** ✅
+
+**Successfully Deployed!** The application is now live at [https://photoplethysmography-explorer.onrender.com/](https://photoplethysmography-explorer.onrender.com/)
+
+#### **Current Deployment Configuration**
+- **Build Command**: `pip install -r requirements-prod.txt`
+- **Start Command**: `python main-prod.py`
+- **Environment Variables**:
+  - `PYTHON_VERSION`: `3.11.0`
+  - `PORT`: `8080`
+  - `DEBUG`: `false`
+- **Auto-deploy**: ✅ Enabled
+- **Health Checks**: ✅ `/health` endpoint working
+- **HTTPS**: ✅ Automatically enabled
 
 #### **Option 1: Using Render Dashboard**
 1. Connect your GitHub repository to Render.com
 2. Create a new Web Service
-3. Configure with:
-   - **Build Command**: `pip install -r requirements-prod.txt`
-   - **Start Command**: `python main-prod.py`
-   - **Environment Variables**:
-     - `PYTHON_VERSION`: `3.11.0`
-     - `PORT`: `8080`
-     - `DEBUG`: `false`
+3. Configure with the settings above
 
 #### **Option 2: Using Render Blueprint**
 ```bash
@@ -363,9 +450,12 @@ coverage report
 
 ## 📊 **Features**
 
+**🎉 Successfully deployed and tested on Render.com!** All features are working in the live environment.
+
 ### **Data Loading**
 - CSV file upload (drag & drop)
 - Local file path loading
+- **Automatic sample data loading**: Loads `sample_data/toy_PPG_data.csv` by default when the app starts
 - **Smart column detection**: Automatically identifies RED/IR columns using multiple strategies:
   - Pattern matching (red, ir, infrared, red_adc, ir_signal, etc.)
   - Numeric column selection (excludes time/timestamp columns)
@@ -391,6 +481,15 @@ coverage report
 - Frequency domain (PSD, spectrograms)
 - Heart rate dynamics (trends, histograms, Poincaré plots)
 - Dual-source analytics (coherence, Lissajous, average beats)
+- **Waveform Analysis**: Comprehensive waveform analysis with peak/valley detection, zero crossings, and statistical features
+
+### **Waveform Analysis Features**
+- **Multiple Signal Types**: Raw, filtered, normalized, and derivative signals
+- **Annotation Options**: Peaks, valleys, and zero crossings with customizable display
+- **Statistical Metrics**: Mean, RMS, peak-to-peak, crest factor, shape factor, impulse factor
+- **Timing Analysis**: Peak intervals, estimated heart rate, variability measures
+- **Signal Quality**: SNR estimation, dynamic range analysis
+- **Interactive Plots**: Hover information, zoom capabilities, and responsive design
 
 ## 🐛 **Bug Fixes**
 

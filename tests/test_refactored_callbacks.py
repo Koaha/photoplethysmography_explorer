@@ -23,6 +23,10 @@ class TestPlotManager(unittest.TestCase):
         self.red_ac = 100 * np.sin(2 * np.pi * 1.2 * self.t)
         self.ir_ac = 80 * np.cos(2 * np.pi * 1.2 * self.t)
 
+        # Verify types
+        self.assertIsInstance(len(self.t), int)
+        self.assertEqual(len(self.t), 1000)
+
     def test_init(self):
         """Test PlotManager initialization."""
         self.assertEqual(self.plot_mgr.template, "plotly")
@@ -38,24 +42,30 @@ class TestPlotManager(unittest.TestCase):
 
     def test_create_time_domain_plots(self):
         """Test time domain plot creation."""
+        # Ensure n is an integer
+        n_value = int(len(self.t))
+
         fig_raw, fig_ac = self.plot_mgr.create_time_domain_plots(
-            self.t,
-            self.red,
-            self.ir,
-            self.red_ac,
-            self.ir_ac,
-            "RED",
-            "IR",
-            "butter",
-            "bandpass",
-            2,
-            len(self.t),
+            self.t,  # t
+            self.red,  # red
+            self.ir,  # ir
+            self.red,  # waveform (using red as waveform for testing)
+            self.red_ac,  # red_ac
+            self.ir_ac,  # ir_ac
+            self.red_ac,  # waveform_ac (using red_ac as waveform_ac for testing)
+            "RED",  # red_col
+            "IR",  # ir_col
+            "WAVEFORM",  # waveform_col
+            "butter",  # family
+            "bandpass",  # resp
+            2,  # order
+            n_value,  # n
         )
 
         self.assertIsNotNone(fig_raw)
         self.assertIsNotNone(fig_ac)
-        self.assertEqual(fig_raw.layout.height, 420)
-        self.assertEqual(fig_ac.layout.height, 420)
+        self.assertEqual(fig_raw.layout.height, 600)  # Updated height
+        self.assertEqual(fig_ac.layout.height, 600)  # Updated height
 
     def test_create_frequency_plots(self):
         """Test frequency plot creation."""
@@ -107,9 +117,11 @@ class TestDataProcessor(unittest.TestCase):
 
         # Create a simple pandas-like DataFrame mock
         import pandas as pd
+
         test_data = {
-            'red': np.random.randn(100),
-            'ir': np.random.randn(100)
+            "red": np.random.randn(100),
+            "ir": np.random.randn(100),
+            "waveform": np.random.randn(100),  # Add waveform column
         }
         mock_df = pd.DataFrame(test_data)
 
@@ -125,9 +137,22 @@ class TestDataProcessor(unittest.TestCase):
                     mock_apply.return_value = np.random.randn(100)
 
                     result = DataProcessor.process_data(
-                        path, window, red_col, ir_col,
-                        100, 1, "butter", "bandpass", 2,
-                        1.0, 40.0, False, 50.0, 30.0, [],
+                        path,
+                        window,
+                        red_col,
+                        ir_col,
+                        "waveform",  # Add waveform_col
+                        100,
+                        1,
+                        "butter",
+                        "bandpass",
+                        2,
+                        1.0,
+                        40.0,
+                        False,
+                        50.0,
+                        30.0,
+                        [],
                     )
 
                     self.assertIsNotNone(result[0])  # t
@@ -135,7 +160,9 @@ class TestDataProcessor(unittest.TestCase):
                     self.assertIsNotNone(result[2])  # ir
                     self.assertIsNotNone(result[3])  # red_ac
                     self.assertIsNotNone(result[4])  # ir_ac
-                    self.assertIsNone(result[5])  # filt_err
+                    self.assertIsNotNone(result[5])  # waveform
+                    self.assertIsNotNone(result[6])  # waveform_ac
+                    self.assertIsNone(result[7])  # filt_err
 
     def test_process_data_invalid(self):
         """Test data processing with invalid data."""
@@ -144,6 +171,7 @@ class TestDataProcessor(unittest.TestCase):
             None,
             None,
             None,
+            None,  # Add waveform_col
             100,
             1,
             "butter",
@@ -162,7 +190,9 @@ class TestDataProcessor(unittest.TestCase):
         self.assertIsNone(result[2])
         self.assertIsNone(result[3])
         self.assertIsNone(result[4])
-        self.assertIsNone(result[5])
+        self.assertIsNone(result[5])  # waveform
+        self.assertIsNone(result[6])  # waveform_ac
+        self.assertIsNone(result[7])  # filt_err
 
 
 class TestInsightGenerator(unittest.TestCase):

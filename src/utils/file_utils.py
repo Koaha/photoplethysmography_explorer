@@ -138,3 +138,32 @@ def get_auto_file_path(default_filename):
     if path.exists():
         return str(path.resolve())
     return None
+
+
+def get_default_sample_data_path():
+    """
+    Get the path to the default sample data file.
+
+    This function returns the path to the toy_PPG_data.csv file in the sample_data
+    directory, which serves as a default dataset for users to explore the tool.
+
+    Returns:
+        str: Resolved absolute path to sample_data/toy_PPG_data.csv if it exists, None otherwise
+    """
+    # Try to find the sample data file
+    sample_path = Path("sample_data/toy_PPG_data.csv")
+    if sample_path.exists():
+        return str(sample_path.resolve())
+
+    # Fallback: try relative to current working directory
+    sample_path = Path.cwd() / "sample_data" / "toy_PPG_data.csv"
+    if sample_path.exists():
+        return str(sample_path.resolve())
+
+    # Fallback: try relative to the script location
+    script_dir = Path(__file__).parent.parent.parent
+    sample_path = script_dir / "sample_data" / "toy_PPG_data.csv"
+    if sample_path.exists():
+        return str(sample_path.resolve())
+
+    return None
