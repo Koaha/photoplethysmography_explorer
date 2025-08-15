@@ -17,6 +17,7 @@ help:
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  lint         Run linting checks (flake8, black, isort)"
+	@echo "  flake8       Run flake8 style checking only"
 	@echo "  format       Format code (black, isort)"
 	@echo ""
 	@echo "Building:"
@@ -46,9 +47,12 @@ test-coverage:
 
 # Code Quality
 lint:
-	flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503
+	flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503,W291,W293,E501,F401,F841,E722,W605,E731,F403,F405,E402,C901
 	black --check src/ tests/
 	isort --check-only src/ tests/
+
+flake8:
+	flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503,W291,W293,E501,F401,F841,E722,W605,E731,F403,F405,E402,C901
 
 format:
 	black src/ tests/

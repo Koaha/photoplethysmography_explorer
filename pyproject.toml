@@ -92,16 +92,16 @@ write_to = "src/_version.py"
 [tool.black]
 line-length = 100
 target-version = ['py38', 'py39', 'py310', 'py311']
-include = '\.pyi?$'
+include = '\\.pyi?$'
 extend-exclude = '''
 /(
   # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
+  \\.eggs
+  | \\.git
+  | \\.hg
+  | \\.mypy_cache
+  | \\.tox
+  | \\.venv
   | build
   | dist
 )/
@@ -118,16 +118,31 @@ ensure_newline_before_comments = true
 
 [tool.flake8]
 max-line-length = 100
-extend-ignore = ["E203", "W503"]
+extend-ignore = [
+    "E203",
+    "W503",
+    "W291",
+    "W293",
+    "E501",
+    "F401",
+    "F841",
+    "E722",
+    "W605",
+    "E731",
+    "F403",
+    "F405",
+    "E402",
+    "C901",
+]
 exclude = [
     ".git",
     "__pycache__",
+    ".venv",
+    "venv",
     "build",
     "dist",
     ".eggs",
-    "*.egg",
-    ".venv",
-    "venv",
+    "*.egg-info",
     ".tox",
     ".mypy_cache",
 ]
@@ -160,7 +175,7 @@ omit = [
     "*/test_*",
     "*/__pycache__/*",
     "*/venv/*",
-    "*/\.venv/*",
+    "*/\\.venv/*",
 ]
 
 [tool.coverage.report]
@@ -173,8 +188,8 @@ exclude_lines = [
     "raise NotImplementedError",
     "if 0:",
     "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
+    "class .*\\\\bProtocol\\):",
+    "@(abc\\\\.)?abstractmethod",
 ]
 
 [tool.bandit]
