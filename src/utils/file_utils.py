@@ -23,7 +23,11 @@ from .exceptions import (
     InvalidFileFormatError,
     PPGError,
 )
-from .validation import validate_csv_file, validate_file_path, validate_file_size
+from .validation import (
+    validate_csv_file,
+    validate_file_path,
+    validate_file_size,
+)
 
 
 def count_rows_quick(path: str) -> int:
