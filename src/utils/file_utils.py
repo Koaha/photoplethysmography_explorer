@@ -9,7 +9,6 @@ This module provides functions for efficient file operations including:
 - Automatic file detection
 """
 
-
 import base64
 import tempfile
 from pathlib import Path
