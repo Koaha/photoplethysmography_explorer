@@ -13,6 +13,8 @@ services:
         value: "8080"
       - key: DEBUG
         value: "false"
+      - key: PYTHONPATH
+        value: "."
     healthCheckPath: /health
     autoDeploy: true
     region: oregon
@@ -21,3 +23,10 @@ services:
       maxInstances: 3
       targetConcurrency: 100
       targetMemoryUtilizationPercent: 80
+    # Add build environment variables for better caching
+    buildFilter:
+      paths:
+        - src/**
+        - requirements-prod.txt
+        - main-prod.py
+        - setup.py

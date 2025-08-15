@@ -1,236 +1,157 @@
-# Deployment Guide for PPG Analysis Tool
+# 🚀 Deployment Guide
 
-This guide covers deploying the PPG Analysis Tool to various cloud platforms using Docker.
+## Render.com Deployment
 
-## 🐳 Docker Setup
+This guide will walk you through deploying your PPG Analysis Tool to Render.com.
 
 ### Prerequisites
-- Docker installed on your system
-- Git repository cloned locally
 
-### Quick Start with Docker
+1. **GitHub Repository**: Your code must be in a GitHub repository
+2. **Render Account**: Sign up at [render.com](https://render.com)
+3. **GitHub Integration**: Connect your GitHub account to Render
 
-1. **Build the Docker image:**
-   ```bash
-   docker build -f Dockerfile.prod -t ppg-tool:latest .
-   ```
+### Step 1: Connect GitHub to Render
 
-2. **Run locally:**
-   ```bash
-   docker run -d --name ppg-tool -p 8080:8080 ppg-tool:latest
-   ```
+1. Go to [render.com](https://render.com) and sign in
+2. Click "New +" and select "Web Service"
+3. Connect your GitHub account if not already connected
+4. Select your `Photoplethymogram` repository
 
-3. **Access the application:**
-   Open http://localhost:8080 in your browser
+### Step 2: Configure the Service
 
-### Using Docker Compose (Development)
+Render will automatically detect your `render.yaml` file. The configuration includes:
 
-1. **Start the application:**
-   ```bash
-   docker-compose up -d
-   ```
+- **Service Type**: Web Service
+- **Name**: ppg-analysis-tool
+- **Runtime**: Python 3.11
+- **Plan**: Starter (free tier)
+- **Build Command**: `pip install -r requirements-prod.txt`
+- **Start Command**: `python main-prod.py`
+- **Health Check**: `/health` endpoint
+- **Auto-deploy**: Enabled (deploys on every push to main branch)
 
-2. **View logs:**
-   ```bash
-   docker-compose logs -f ppg-tool
-   ```
+### Step 3: Environment Variables
 
-3. **Stop the application:**
-   ```bash
-   docker-compose down
-   ```
+The following environment variables are automatically set:
 
-## 🚀 Render.com Deployment
+- `PYTHON_VERSION`: 3.11.0
+- `PORT`: 8080
+- `DEBUG`: false
+- `PYTHONPATH`: . (current directory)
 
-### Option 1: Using Render Dashboard
+### Step 4: Deploy
 
-1. **Connect your GitHub repository** to Render.com
-2. **Create a new Web Service**
-3. **Configure the service:**
-   - **Build Command:** `pip install -r requirements-prod.txt`
-   - **Start Command:** `python main-prod.py`
-   - **Environment Variables:**
-     - `PYTHON_VERSION`: `3.11.0`
-     - `PORT`: `8080`
-     - `DEBUG`: `false`
+1. Click "Create Web Service"
+2. Render will automatically:
+   - Clone your repository
+   - Install dependencies
+   - Build your application
+   - Start the service
+   - Provide a public URL
 
-### Option 2: Using Render Blueprint
+### Step 5: Monitor Deployment
 
-1. **Install Render CLI:**
-   ```bash
-   curl -sSL https://render.com/download-cli/install.sh | bash
-   ```
+- **Build Logs**: Check the build process for any errors
+- **Runtime Logs**: Monitor application logs for issues
+- **Health Check**: Verify `/health` endpoint returns `{"status": "healthy"}`
 
-2. **Deploy using the blueprint:**
-   ```bash
-   render blueprint apply
-   ```
+### Step 6: Custom Domain (Optional)
 
-### Option 3: Using Deployment Script
+1. Go to your service settings
+2. Click "Custom Domains"
+3. Add your domain and configure DNS
 
+### Troubleshooting
+
+#### Common Issues
+
+1. **Build Failures**:
+   - Check `requirements-prod.txt` for dependency conflicts
+   - Verify Python version compatibility
+   - Check build logs for specific error messages
+
+2. **Runtime Errors**:
+   - Check application logs
+   - Verify environment variables
+   - Test locally with `python main-prod.py`
+
+3. **Health Check Failures**:
+   - Ensure `/health` endpoint is working
+   - Check if the app is binding to the correct port
+   - Verify the app starts without errors
+
+#### Performance Optimization
+
+1. **Enable Caching**: Render automatically caches builds
+2. **Optimize Dependencies**: Use specific versions in requirements
+3. **Monitor Scaling**: Adjust min/max instances based on traffic
+
+### Environment-Specific Configurations
+
+#### Development
 ```bash
-chmod +x deploy.sh
-./deploy.sh render
+DEBUG=true
+PORT=5000
 ```
 
-## ☁️ Google Cloud Platform Deployment
+#### Production (Render)
+```bash
+DEBUG=false
+PORT=8080
+```
 
-### Prerequisites
+### Security Considerations
 
-1. **Install Google Cloud SDK:**
-   ```bash
-   # macOS
-   brew install google-cloud-sdk
-   
-   # Ubuntu/Debian
-   curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-   echo "deb https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-   sudo apt-get update && sudo apt-get install google-cloud-sdk
-   ```
+1. **Environment Variables**: Never commit secrets to version control
+2. **Health Checks**: Use the `/health` endpoint for load balancer health checks
+3. **HTTPS**: Render automatically provides SSL certificates
+4. **Access Control**: Consider adding authentication if needed
 
-2. **Authenticate and set project:**
-   ```bash
-   gcloud auth login
-   gcloud config set project YOUR_PROJECT_ID
-   ```
+### Monitoring and Logs
 
-### Deploy to Cloud Run
+1. **Application Logs**: Available in Render dashboard
+2. **Build Logs**: Check for dependency and build issues
+3. **Performance Metrics**: Monitor response times and resource usage
+4. **Error Tracking**: Set up error monitoring for production issues
 
-1. **Using Cloud Build (Recommended):**
-   ```bash
-   gcloud builds submit --config cloudbuild.yaml .
-   ```
+### Continuous Deployment
 
-2. **Using deployment script:**
-   ```bash
-   chmod +x deploy.sh
-   ./deploy.sh gcp
-   ```
+With `autoDeploy: true` in your `render.yaml`:
+- Every push to `main` branch triggers automatic deployment
+- Builds are cached for faster deployments
+- Zero-downtime deployments are supported
 
-3. **Manual deployment:**
-   ```bash
-   # Build and push image
-   docker build -f Dockerfile.prod -t gcr.io/YOUR_PROJECT_ID/ppg-tool .
-   docker push gcr.io/YOUR_PROJECT_ID/ppg-tool
-   
-   # Deploy to Cloud Run
-   gcloud run deploy ppg-tool \
-     --image gcr.io/YOUR_PROJECT_ID/ppg-tool \
-     --platform managed \
-     --region us-central1 \
-     --allow-unauthenticated \
-     --port 8080
-   ```
+### Cost Optimization
 
-## 🔧 Environment Variables
+1. **Starter Plan**: Free tier with limitations
+2. **Scaling**: Adjust min/max instances based on usage
+3. **Resource Usage**: Monitor memory and CPU usage
+4. **Idle Timeout**: Free tier services sleep after 15 minutes of inactivity
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `PORT` | Port to run the application on | `8080` | No |
-| `DEBUG` | Enable debug mode | `false` | No |
-| `PYTHONPATH` | Python path for imports | `/app/src` | No |
+### Support
 
-## 📊 Health Checks
+- **Render Documentation**: [docs.render.com](https://docs.render.com)
+- **Community**: [Render Community](https://community.render.com)
+- **Status Page**: [status.render.com](https://status.render.com)
 
-The application includes a health check endpoint at `/health` that returns a simple status response. This is used by:
+---
 
-- Docker health checks
-- Load balancers
-- Cloud platforms for monitoring
+## 🐳 Docker Deployment (Alternative)
 
-## 🔒 Security Features
+If you prefer Docker deployment, you can also use the included `Dockerfile.prod`:
 
-- **Non-root user:** Application runs as non-root user `app`
-- **Minimal base image:** Uses Python slim image to reduce attack surface
-- **Security headers:** Nginx configuration includes security headers
-- **Port binding:** Only binds to necessary ports
+```bash
+# Build the image
+docker build -f Dockerfile.prod -t ppg-analysis-tool .
 
-## 📈 Scaling
+# Run the container
+docker run -p 8080:8080 -e PORT=8080 ppg-analysis-tool
+```
 
-### Render.com
-- **Auto-scaling:** Configured to scale from 1-3 instances
-- **Target concurrency:** 100 requests per instance
-- **Memory utilization:** Scales at 80% memory usage
+## ☁️ Other Cloud Platforms
 
-### Google Cloud Platform
-- **Cloud Run:** Automatically scales to zero when not in use
-- **Max instances:** Limited to 10 instances
-- **Memory:** 512MB per instance
-- **CPU:** 1 vCPU per instance
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Port already in use:**
-   ```bash
-   # Check what's using the port
-   lsof -i :8080
-   
-   # Kill the process
-   kill -9 PID
-   ```
-
-2. **Docker build fails:**
-   ```bash
-   # Clean Docker cache
-   docker system prune -a
-   
-   # Rebuild without cache
-   docker build --no-cache -f Dockerfile.prod -t ppg-tool:latest .
-   ```
-
-3. **Application won't start:**
-   ```bash
-   # Check logs
-   docker logs ppg-tool
-   
-   # Check container status
-   docker ps -a
-   ```
-
-### Logs and Monitoring
-
-1. **View application logs:**
-   ```bash
-   # Docker
-   docker logs -f ppg-tool
-   
-   # Docker Compose
-   docker-compose logs -f ppg-tool
-   ```
-
-2. **Check container health:**
-   ```bash
-   docker inspect ppg-tool | grep Health -A 10
-   ```
-
-## 🚀 Performance Optimization
-
-### Docker Optimizations
-
-- **Multi-stage build:** Reduces final image size
-- **Layer caching:** Optimizes build times
-- **Minimal dependencies:** Only includes production requirements
-
-### Application Optimizations
-
-- **Debug mode disabled:** Production optimizations enabled
-- **Hot reload disabled:** Better performance in production
-- **Memory management:** Optimized for cloud deployment
-
-## 📚 Additional Resources
-
-- [Docker Documentation](https://docs.docker.com/)
-- [Render.com Documentation](https://render.com/docs)
-- [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
-- [Dash Deployment Guide](https://dash.plotly.com/deployment)
-
-## 🤝 Support
-
-If you encounter issues during deployment:
-
-1. Check the troubleshooting section above
-2. Review the application logs
-3. Verify your cloud platform configuration
-4. Check the [GitHub Issues](https://github.com/your-username/ppg-analysis-tool/issues) page
+This application is also configured for:
+- **Google Cloud Platform** (GCP)
+- **AWS Elastic Beanstalk**
+- **Heroku** (with Procfile)
+- **DigitalOcean App Platform**

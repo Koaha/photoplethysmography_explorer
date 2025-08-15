@@ -17,3 +17,6 @@ waitress==2.1.2
 
 # Security and monitoring
 python-dotenv==1.0.0
+
+# Render-specific optimizations
+psutil==5.9.5
