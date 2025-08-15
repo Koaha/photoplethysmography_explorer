@@ -7,16 +7,18 @@ It also implements smart column detection for RED/IR channel identification
 and manages data window settings.
 """
 
+from pathlib import Path
+
 import dash
 from dash import Input, Output, State, callback_context, no_update
-from pathlib import Path
+
+from ..config.settings import DEFAULT_WINDOW_END, DEFAULT_WINDOW_START
 from ..utils.file_utils import (
     count_rows_quick,
+    get_auto_file_path,
     get_columns_only,
     parse_uploaded_csv_to_temp,
-    get_auto_file_path,
 )
-from ..config.settings import DEFAULT_WINDOW_START, DEFAULT_WINDOW_END
 
 
 def register_data_callbacks(app):

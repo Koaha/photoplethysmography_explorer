@@ -5,8 +5,9 @@ This package provides a comprehensive tool for analyzing photoplethysmogram (PPG
 with advanced signal processing, visualization, and analysis capabilities.
 """
 
-from setuptools import setup, find_packages
 from pathlib import Path
+
+from setuptools import find_packages, setup
 
 # Read the README file for long description
 this_directory = Path(__file__).parent

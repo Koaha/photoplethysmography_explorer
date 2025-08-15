@@ -2,26 +2,26 @@
 Unit tests for callback functions.
 """
 
+import os
+import tempfile
 import unittest
+from unittest.mock import Mock, patch
+
+import dash
 import numpy as np
 import pandas as pd
-import tempfile
-import os
-from unittest.mock import Mock, patch
-import dash
 from dash import Input, Output
 
-from src.callbacks.plot_callbacks import (
-    _generate_time_domain_plots,
-    _generate_frequency_plots,
-    _generate_dynamics_plots,
-    _generate_dual_source_plots,
-    _generate_insights,
-    _generate_file_info,
-    _create_blank_figure,
-)
 from src.callbacks.data_callbacks import load_data
-from src.callbacks.window_callbacks import window_controls, reflect_window, handle_slider_change
+from src.callbacks.plot_callbacks import (
+    _create_blank_figure,
+    _generate_dual_source_plots,
+    _generate_file_info,
+    _generate_frequency_plots,
+    _generate_insights,
+    _generate_time_domain_plots,
+)
+from src.callbacks.window_callbacks import handle_slider_change, reflect_window, window_controls
 
 
 class TestPlotCallbacks(unittest.TestCase):

@@ -3,19 +3,20 @@ Unit tests for configuration settings.
 """
 
 import unittest
+
 from src.config.settings import (
-    DEFAULT_FS,
-    DEFAULT_DECIM_USER,
-    MAX_DISPLAY_POINTS,
-    DEFAULT_SPEC_WIN_SEC,
-    DEFAULT_SPEC_OVERLAP,
-    DEFAULT_HR_MIN,
-    DEFAULT_HR_MAX,
-    DEFAULT_PEAK_PROM_FACTOR,
-    APP_TITLE,
     APP_SUBTITLE,
+    APP_TITLE,
+    DEFAULT_DECIM_USER,
+    DEFAULT_FS,
+    DEFAULT_HR_MAX,
+    DEFAULT_HR_MIN,
+    DEFAULT_PEAK_PROM_FACTOR,
+    DEFAULT_SPEC_OVERLAP,
+    DEFAULT_SPEC_WIN_SEC,
     GRID_COLUMNS,
     GRID_GAP,
+    MAX_DISPLAY_POINTS,
     MAX_WIDTH,
 )
 

@@ -4,8 +4,9 @@ Main Dash application for the PPG analysis tool.
 
 import dash
 from dash import html
-from .components import create_layout, APP_INDEX_STRING
-from .callbacks import register_data_callbacks, register_window_callbacks, register_plot_callbacks
+
+from .callbacks import register_data_callbacks, register_plot_callbacks, register_window_callbacks
+from .components import APP_INDEX_STRING, create_layout
 
 
 def create_app():

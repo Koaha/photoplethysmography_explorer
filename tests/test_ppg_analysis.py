@@ -3,16 +3,18 @@ Unit tests for PPG analysis functions.
 """
 
 import unittest
+
 import numpy as np
+
 from src.utils.ppg_analysis import (
-    robust_absorbance,
-    beats_from_peaks,
-    beat_ac_dc,
-    r_series_spo2,
     avg_beat,
-    ms_coherence,
-    estimate_spo2,
+    beat_ac_dc,
+    beats_from_peaks,
     compute_hr_trend,
+    estimate_spo2,
+    ms_coherence,
+    robust_absorbance,
+    r_series_spo2,
     sdppg,
 )
 

@@ -2,15 +2,15 @@
 Pytest configuration and fixtures for the PPG analysis tool tests.
 """
 
-import pytest
-import numpy as np
-import tempfile
 import os
+import sys
+import tempfile
 from pathlib import Path
 
-# Add the src directory to the Python path
-import sys
+import numpy as np
+import pytest
 
+# Add the src directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 

@@ -2,17 +2,18 @@
 Integration tests for the complete PPG analysis application.
 """
 
+import os
+import tempfile
 import unittest
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-import tempfile
-import os
-from pathlib import Path
 
 from src.app import create_app
 from src.utils.file_utils import read_window
-from src.utils.signal_processing import apply_chain, design_base_filter
 from src.utils.ppg_analysis import compute_hr_trend, estimate_spo2
+from src.utils.signal_processing import apply_chain, design_base_filter
 
 
 class TestApplicationIntegration(unittest.TestCase):

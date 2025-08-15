@@ -3,11 +3,12 @@ Tests for the refactored plot callbacks.
 """
 
 import unittest
-import numpy as np
 from unittest.mock import Mock, patch
 
+import numpy as np
+
 # Import the refactored classes
-from src.callbacks.plot_callbacks import PlotManager, DataProcessor, InsightGenerator
+from src.callbacks.plot_callbacks import DataProcessor, InsightGenerator, PlotManager
 
 
 class TestPlotManager(unittest.TestCase):

@@ -5,9 +5,9 @@ Test runner for the PPG analysis tool.
 This script runs all unit tests and provides a summary of results.
 """
 
-import unittest
-import sys
 import os
+import sys
+import unittest
 from pathlib import Path
 
 # Add the src directory to the Python path

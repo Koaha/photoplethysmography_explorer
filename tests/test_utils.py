@@ -2,28 +2,29 @@
 Unit tests for utility functions.
 """
 
-import unittest
-import numpy as np
-import tempfile
 import os
+import tempfile
+import unittest
 from pathlib import Path
 
-from src.utils.signal_processing import (
-    safe_float,
-    safe_int,
-    design_base_filter,
-    apply_chain,
-    estimate_rates_psd,
-    quick_snr,
-    auto_decimation,
-    cross_correlation_lag,
-)
+import numpy as np
+
 from src.utils.file_utils import (
     count_rows_quick,
+    get_auto_file_path,
     get_columns_only,
     parse_uploaded_csv_to_temp,
     read_window,
-    get_auto_file_path,
+)
+from src.utils.signal_processing import (
+    apply_chain,
+    auto_decimation,
+    cross_correlation_lag,
+    design_base_filter,
+    estimate_rates_psd,
+    quick_snr,
+    safe_float,
+    safe_int,
 )
 
 

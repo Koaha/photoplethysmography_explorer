@@ -4,18 +4,19 @@ Layout components for the PPG analysis tool.
 
 import dash
 from dash import dcc, html
+
 from ..config.settings import (
-    APP_TITLE,
     APP_SUBTITLE,
-    DEFAULT_WINDOW_START,
-    DEFAULT_WINDOW_END,
-    DEFAULT_FS,
-    DEFAULT_SPEC_WIN_SEC,
-    DEFAULT_SPEC_OVERLAP,
-    DEFAULT_HR_MIN,
-    DEFAULT_HR_MAX,
-    DEFAULT_PEAK_PROM_FACTOR,
+    APP_TITLE,
     DEFAULT_DECIM_USER,
+    DEFAULT_FS,
+    DEFAULT_HR_MAX,
+    DEFAULT_HR_MIN,
+    DEFAULT_PEAK_PROM_FACTOR,
+    DEFAULT_SPEC_OVERLAP,
+    DEFAULT_SPEC_WIN_SEC,
+    DEFAULT_WINDOW_END,
+    DEFAULT_WINDOW_START,
 )
 
 

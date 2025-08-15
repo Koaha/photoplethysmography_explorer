@@ -12,39 +12,40 @@ The main update_plots callback orchestrates these classes to provide a clean,
 maintainable separation of concerns.
 """
 
+from pathlib import Path
+
 import dash
-from dash import Input, Output, State, callback_context, no_update, dcc, html
 import numpy as np
 import pandas as pd
-from pathlib import Path
 import plotly.graph_objects as go
+from dash import Input, Output, State, callback_context, dcc, html, no_update
 from plotly.subplots import make_subplots
 
-from ..utils.file_utils import read_window
-from ..utils.signal_processing import (
-    safe_float,
-    safe_int,
-    design_base_filter,
-    apply_chain,
-    estimate_rates_psd,
-    quick_snr,
-    auto_decimation,
-    cross_correlation_lag,
+from ..config.settings import (
+    DEFAULT_DECIM_USER,
+    DEFAULT_FS,
+    DEFAULT_SPEC_OVERLAP,
+    DEFAULT_SPEC_WIN_SEC,
+    MAX_DISPLAY_POINTS,
 )
+from ..utils.file_utils import read_window
 from ..utils.ppg_analysis import (
-    estimate_spo2,
-    compute_hr_trend,
-    r_series_spo2,
-    ms_coherence,
     avg_beat,
+    compute_hr_trend,
+    estimate_spo2,
+    ms_coherence,
+    r_series_spo2,
     sdppg,
 )
-from ..config.settings import (
-    DEFAULT_FS,
-    DEFAULT_DECIM_USER,
-    MAX_DISPLAY_POINTS,
-    DEFAULT_SPEC_WIN_SEC,
-    DEFAULT_SPEC_OVERLAP,
+from ..utils.signal_processing import (
+    apply_chain,
+    auto_decimation,
+    cross_correlation_lag,
+    design_base_filter,
+    estimate_rates_psd,
+    quick_snr,
+    safe_float,
+    safe_int,
 )
 
 

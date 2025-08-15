@@ -12,8 +12,16 @@ This module provides core signal processing functions including:
 """
 
 import numpy as np
-from scipy.signal import iirfilter, sosfiltfilt, iirnotch, tf2sos, welch, spectrogram, find_peaks
-from scipy.signal import coherence
+from scipy.signal import (
+    coherence,
+    find_peaks,
+    iirfilter,
+    iirnotch,
+    sosfiltfilt,
+    spectrogram,
+    tf2sos,
+    welch,
+)
 
 
 def safe_float(x, fallback):

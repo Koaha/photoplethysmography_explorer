@@ -3,7 +3,7 @@ PPG-specific analysis utilities.
 """
 
 import numpy as np
-from scipy.signal import find_peaks, welch, spectrogram, coherence
+from scipy.signal import coherence, find_peaks, spectrogram, welch
 
 
 def robust_absorbance(x):
