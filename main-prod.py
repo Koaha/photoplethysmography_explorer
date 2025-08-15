@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # Get debug mode from environment variable
     debug = os.environ.get("DEBUG", "false").lower() == "true"
     
-    # Run the app
+    # Run the app using the stable Dash API
     app.run_server(
         host="0.0.0.0",  # Bind to all interfaces for Docker
         port=port,

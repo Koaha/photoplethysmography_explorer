@@ -2,11 +2,11 @@
 # Updated for Python 3.11+ compatibility
 
 # Core web framework
-dash>=2.14.0
-dash-bootstrap-components>=1.5.0
+dash==2.13.0
+dash-bootstrap-components==1.5.0
 
 # Data processing and visualization
-plotly>=5.17.0
+plotly==5.17.0
 numpy>=1.24.0,<2.0.0
 pandas>=2.0.0,<3.0.0
 scipy>=1.11.0,<2.0.0
