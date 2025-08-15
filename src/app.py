@@ -6,6 +6,9 @@ logging, and configuration management.
 """
 
 import logging
+
+# Configure logging
+import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -17,12 +20,25 @@ from .components import APP_INDEX_STRING, create_layout
 from .config.settings import settings
 from .utils.exceptions import ConfigurationError, PPGError
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO if not settings.debug else logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("logs/app.log", mode="a")],
-)
+# Create logs directory if it doesn't exist
+logs_dir = Path("logs")
+logs_dir.mkdir(exist_ok=True)
+
+# Configure logging with error handling for file handler
+try:
+    logging.basicConfig(
+        level=logging.INFO if not settings.debug else logging.DEBUG,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("logs/app.log", mode="a")],
+    )
+except Exception as e:
+    # Fallback to console-only logging if file logging fails
+    logging.basicConfig(
+        level=logging.INFO if not settings.debug else logging.DEBUG,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)],
+    )
+    print(f"Warning: File logging failed, using console-only logging: {e}")
 
 logger = logging.getLogger(__name__)
 

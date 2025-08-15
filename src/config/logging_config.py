@@ -237,10 +237,26 @@ def log_analysis_step(step_name: str, input_info: str = None, **kwargs) -> None:
 # Default logging setup
 def setup_default_logging() -> None:
     """Set up default logging configuration."""
-    log_file = Path("logs/app.log")
-    setup_logging(log_file=str(log_file), enable_colors=True)
+    try:
+        # Create logs directory if it doesn't exist
+        log_file = Path("logs/app.log")
+        log_file.parent.mkdir(exist_ok=True)
+        setup_logging(log_file=str(log_file), enable_colors=True)
+    except Exception as e:
+        # Fallback to console-only logging if file logging fails
+        print(f"Warning: File logging setup failed, using console-only logging: {e}")
+        setup_logging(enable_colors=True)
 
 
-# Initialize logging when module is imported
+# Initialize logging when module is imported (only if no handlers exist)
 if not logging.getLogger().handlers:
-    setup_default_logging()
+    try:
+        setup_default_logging()
+    except Exception as e:
+        # If setup fails, just use basic console logging
+        print(f"Warning: Logging setup failed: {e}")
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            handlers=[logging.StreamHandler()],
+        )
