@@ -11,7 +11,12 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-import colorlog
+try:
+    import colorlog
+
+    COLORLOG_AVAILABLE = True
+except ImportError:
+    COLORLOG_AVAILABLE = False
 
 from .settings import settings
 
@@ -58,8 +63,8 @@ def setup_logging(
     )
     simple_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
-    # Console handler with colorlog
-    if enable_colors:
+    # Console handler with colorlog (if available)
+    if enable_colors and COLORLOG_AVAILABLE:
         console_handler = colorlog.StreamHandler(sys.stdout)
         console_formatter = colorlog.ColoredFormatter(
             "%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -100,8 +105,12 @@ def setup_logging(
     logging.info(f"Logging configured with level: {log_level}")
     if log_file:
         logging.info(f"Log file: {log_file}")
-    if enable_colors:
+    if enable_colors and COLORLOG_AVAILABLE:
         logging.info("Colored console output enabled")
+    elif enable_colors and not COLORLOG_AVAILABLE:
+        logging.info("Colored console output requested but colorlog not available")
+    else:
+        logging.info("Colored console output disabled")
 
 
 def get_logger(name: str) -> logging.Logger:
