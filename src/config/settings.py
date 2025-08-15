@@ -24,8 +24,6 @@ except ImportError:
         PYDANTIC_V2 = False
     except ImportError:
         # Fallback to simple dataclass if no Pydantic available
-        from dataclasses import dataclass
-
         PYDANTIC_V2 = False
         PYDANTIC_AVAILABLE = False
 

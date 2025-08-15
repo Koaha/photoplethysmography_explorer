@@ -153,7 +153,7 @@ class TestIntegration:
 
     def test_validation_import_works(self):
         """Test that validation functions can be imported and used."""
-        from src.utils.validation import validate_csv_file, validate_dataframe, validate_file_path
+        from src.utils.validation import validate_csv_file, validate_dataframe
 
         # Just test that imports work
         assert validate_file_path

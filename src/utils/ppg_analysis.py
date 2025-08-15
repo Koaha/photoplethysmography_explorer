@@ -26,6 +26,7 @@ from .exceptions import (
     PeakDetectionError,
     PPGError,
     SignalProcessingError,
+    ValidationError,
 )
 from .validation import (
     validate_heart_rate_range,
@@ -705,7 +706,7 @@ def calculate_heart_rate(peaks: np.ndarray, fs: float, method: str = "mean") -> 
 
         log_computation_progress(
             "heart rate calculation",
-            f"converted to heart rate values",
+            "converted to heart rate values",
             hr_range=(np.min(hr_values), np.max(hr_values)),
         )
 
