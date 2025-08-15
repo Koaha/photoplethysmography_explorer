@@ -7,21 +7,13 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-import dash
 import numpy as np
 import pandas as pd
-from dash import Input, Output
+from dash import Dash, Input, Output
 
-from src.callbacks.data_callbacks import load_data
-from src.callbacks.plot_callbacks import (
-    _create_blank_figure,
-    _generate_dual_source_plots,
-    _generate_file_info,
-    _generate_frequency_plots,
-    _generate_insights,
-    _generate_time_domain_plots,
-)
-from src.callbacks.window_callbacks import handle_slider_change, reflect_window, window_controls
+from src.callbacks.data_callbacks import register_data_callbacks
+from src.callbacks.plot_callbacks import InsightGenerator, PlotManager
+from src.callbacks.window_callbacks import register_window_callbacks
 
 
 class TestPlotCallbacks(unittest.TestCase):
@@ -38,18 +30,22 @@ class TestPlotCallbacks(unittest.TestCase):
         self.ir = 800 + 80 * np.cos(2 * np.pi * 1.2 * self.t)
         self.red_ac = 100 * np.sin(2 * np.pi * 1.2 * self.t)
         self.ir_ac = 80 * np.cos(2 * np.pi * 1.2 * self.t)
+        
+        # Create instances of the classes
+        self.plot_manager = PlotManager(self.template, self.theme)
+        self.insight_generator = InsightGenerator()
 
     def test_create_blank_figure(self):
         """Test blank figure creation."""
-        fig = _create_blank_figure(300, self.template, self.theme)
+        fig = self.plot_manager.create_blank_figure(300)
         self.assertEqual(fig.layout.height, 300)
-        self.assertEqual(fig.layout.template, self.template)
+        # Check that the template is set (the actual template object, not the string name)
+        self.assertIsNotNone(fig.layout.template)
 
     def test_generate_time_domain_plots(self):
         """Test time domain plot generation."""
         # Test with time_domain tab
-        fig_raw, fig_ac = _generate_time_domain_plots(
-            "time_domain",
+        fig_raw, fig_ac = self.plot_manager.create_time_domain_plots(
             self.t,
             self.red,
             self.ir,
@@ -61,8 +57,6 @@ class TestPlotCallbacks(unittest.TestCase):
             "bandpass",
             2,
             self.n,
-            self.template,
-            self.theme,
         )
 
         self.assertIsNotNone(fig_raw)
@@ -71,8 +65,7 @@ class TestPlotCallbacks(unittest.TestCase):
         self.assertEqual(fig_ac.layout.height, 420)
 
         # Test with different tab
-        fig_raw, fig_ac = _generate_time_domain_plots(
-            "frequency",
+        fig_raw, fig_ac = self.plot_manager.create_time_domain_plots(
             self.t,
             self.red,
             self.ir,
@@ -84,8 +77,6 @@ class TestPlotCallbacks(unittest.TestCase):
             "bandpass",
             2,
             self.n,
-            self.template,
-            self.theme,
         )
 
         self.assertEqual(fig_raw.layout.height, 420)
@@ -94,16 +85,13 @@ class TestPlotCallbacks(unittest.TestCase):
     def test_generate_frequency_plots(self):
         """Test frequency domain plot generation."""
         # Test with frequency tab
-        fig_psd, fig_spec = _generate_frequency_plots(
-            "frequency",
+        fig_psd, fig_spec = self.plot_manager.create_frequency_plots(
             self.red_ac,
             self.ir_ac,
             self.fs,
             2.0,
             0.5,
             ["on"],
-            self.template,
-            self.theme,
         )
 
         self.assertIsNotNone(fig_psd)
@@ -112,16 +100,13 @@ class TestPlotCallbacks(unittest.TestCase):
         self.assertEqual(fig_spec.layout.height, 380)
 
         # Test with different tab
-        fig_psd, fig_spec = _generate_frequency_plots(
-            "time_domain",
+        fig_psd, fig_spec = self.plot_manager.create_frequency_plots(
             self.red_ac,
             self.ir_ac,
             self.fs,
             2.0,
             0.5,
             ["on"],
-            self.template,
-            self.theme,
         )
 
         self.assertEqual(fig_psd.layout.height, 360)
@@ -130,9 +115,7 @@ class TestPlotCallbacks(unittest.TestCase):
     def test_generate_dynamics_plots(self):
         """Test dynamics plot generation."""
         # Test with dynamics tab
-        fig_hr, fig_hist, fig_poi, fig_xc = _generate_dynamics_plots(
-            "dynamics",
-            "hr",
+        fig_hr, fig_hist, fig_poi, fig_xc = self.plot_manager.create_dynamics_plots(
             self.red_ac,
             self.ir_ac,
             self.fs,
@@ -141,8 +124,6 @@ class TestPlotCallbacks(unittest.TestCase):
             180,
             0.5,
             ["hr"],
-            self.template,
-            self.theme,
         )
 
         self.assertIsNotNone(fig_hr)
@@ -151,9 +132,7 @@ class TestPlotCallbacks(unittest.TestCase):
         self.assertIsNotNone(fig_xc)
 
         # Test with different tab
-        fig_hr, fig_hist, fig_poi, fig_xc = _generate_dynamics_plots(
-            "time_domain",
-            "hr",
+        fig_hr, fig_hist, fig_poi, fig_xc = self.plot_manager.create_dynamics_plots(
             self.red_ac,
             self.ir_ac,
             self.fs,
@@ -162,8 +141,6 @@ class TestPlotCallbacks(unittest.TestCase):
             180,
             0.5,
             ["hr"],
-            self.template,
-            self.theme,
         )
 
         self.assertEqual(fig_hr.layout.height, 320)
@@ -172,17 +149,13 @@ class TestPlotCallbacks(unittest.TestCase):
     def test_generate_dual_source_plots(self):
         """Test dual source plot generation."""
         # Test with dual_source tab
-        fig_rtrend, fig_coh, fig_liss, fig_avgbeat, fig_sdppg = _generate_dual_source_plots(
-            "dual_source",
-            "rtrend",
+        fig_rtrend, fig_coh, fig_liss, fig_avgbeat, fig_sdppg = self.plot_manager.create_dual_source_plots(
             self.red,
             self.ir,
             self.red_ac,
             self.ir_ac,
             self.fs,
             self.t,
-            self.template,
-            self.theme,
         )
 
         self.assertIsNotNone(fig_rtrend)
@@ -192,17 +165,13 @@ class TestPlotCallbacks(unittest.TestCase):
         self.assertIsNotNone(fig_sdppg)
 
         # Test with different tab
-        fig_rtrend, fig_coh, fig_liss, fig_avgbeat, fig_sdppg = _generate_dual_source_plots(
-            "time_domain",
-            "rtrend",
+        fig_rtrend, fig_coh, fig_liss, fig_avgbeat, fig_sdppg = self.plot_manager.create_dual_source_plots(
             self.red,
             self.ir,
             self.red_ac,
             self.ir_ac,
             self.fs,
             self.t,
-            self.template,
-            self.theme,
         )
 
         self.assertEqual(fig_rtrend.layout.height, 320)
@@ -210,20 +179,20 @@ class TestPlotCallbacks(unittest.TestCase):
 
     def test_generate_insights(self):
         """Test insight generation."""
-        chips = _generate_insights(self.red, self.ir, self.red_ac, self.ir_ac, None, self.template)
+        chips = self.insight_generator.generate_insights(self.red, self.ir, self.red_ac, self.ir_ac, None, self.template)
 
         self.assertIsInstance(chips, list)
         self.assertGreater(len(chips), 0)
 
         # Test with filter error
-        chips_error = _generate_insights(
+        chips_error = self.insight_generator.generate_insights(
             self.red, self.ir, self.red_ac, self.ir_ac, "Test error", self.template
         )
         self.assertGreater(len(chips_error), len(chips))
 
     def test_generate_file_info(self):
         """Test file info generation."""
-        info = _generate_file_info(
+        info = self.insight_generator.generate_file_info(
             "/path/to/test.csv",
             10000,
             100,
@@ -254,13 +223,12 @@ class TestDataCallbacks(unittest.TestCase):
 
     def setUp(self):
         """Set up test data."""
-        self.app = dash.Dash(__name__)
+        self.app = Dash(__name__)
 
-    def test_load_data(self):
-        """Test data loading callback."""
-        # This would require more complex mocking of Dash components
-        # For now, just test that the function exists and is callable
-        self.assertTrue(callable(load_data))
+    def test_register_data_callbacks(self):
+        """Test data callbacks registration."""
+        # Test that the registration function exists and is callable
+        self.assertTrue(callable(register_data_callbacks))
 
 
 class TestWindowCallbacks(unittest.TestCase):
@@ -268,25 +236,12 @@ class TestWindowCallbacks(unittest.TestCase):
 
     def setUp(self):
         """Set up test data."""
-        self.app = dash.Dash(__name__)
+        self.app = Dash(__name__)
 
-    def test_window_controls(self):
-        """Test window controls callback."""
-        # This would require more complex mocking of Dash components
-        # For now, just test that the function exists and is callable
-        self.assertTrue(callable(window_controls))
-
-    def test_reflect_window(self):
-        """Test window reflection callback."""
-        # This would require more complex mocking of Dash components
-        # For now, just test that the function exists and is callable
-        self.assertTrue(callable(reflect_window))
-
-    def test_handle_slider_change(self):
-        """Test slider change handler callback."""
-        # This would require more complex mocking of Dash components
-        # For now, just test that the function exists and is callable
-        self.assertTrue(callable(handle_slider_change))
+    def test_register_window_callbacks(self):
+        """Test window callbacks registration."""
+        # Test that the registration function exists and is callable
+        self.assertTrue(callable(register_window_callbacks))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,19 @@
+# Production dependencies for PPG Analysis Tool
+# Pinned versions for stability
+
+# Core web framework
+dash==2.14.2
+dash-bootstrap-components==1.5.0
+
+# Data processing and visualization
+plotly==5.17.0
+numpy==1.24.3
+pandas==2.0.3
+scipy==1.11.1
+
+# Additional dependencies for production
+gunicorn==21.2.0
+waitress==2.1.2
+
+# Security and monitoring
+python-dotenv==1.0.0

@@ -32,11 +32,11 @@ help:
 
 # Installation
 install:
-	pip install -r requirements.txt
+	python -m pip install -r requirements.txt
 
 install-dev:
-	pip install -r requirements.txt
-	pip install -r requirements-dev.txt
+	python -m pip install -r requirements.txt
+	python -m pip install -r requirements-dev.txt
 
 # Testing
 test:
@@ -55,8 +55,8 @@ flake8:
 	flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503,W291,W293,E501,F401,F841,E722,W605,E731,F403,F405,E402,C901
 
 format:
-	black src/ tests/
-	isort src/ tests/
+	black src/ tests/ src/* src/callbacks/* src/components/* src/config/* src/utils/*
+	isort src/ tests/ src/* src/callbacks/* src/components/* src/config/* src/utils/*
 
 # Building
 build:

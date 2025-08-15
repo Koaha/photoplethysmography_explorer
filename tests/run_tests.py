@@ -34,7 +34,7 @@ def run_all_tests():
 
     # Utility tests
     try:
-        from tests.test_utils import TestSignalProcessing, TestFileUtils
+        from tests.test_utils import TestFileUtils, TestSignalProcessing
 
         test_suite.addTests(loader.loadTestsFromTestCase(TestSignalProcessing))
         test_suite.addTests(loader.loadTestsFromTestCase(TestFileUtils))
@@ -53,7 +53,7 @@ def run_all_tests():
 
     # Callback tests
     try:
-        from tests.test_callbacks import TestPlotCallbacks, TestDataCallbacks, TestWindowCallbacks
+        from tests.test_callbacks import TestDataCallbacks, TestPlotCallbacks, TestWindowCallbacks
 
         test_suite.addTests(loader.loadTestsFromTestCase(TestPlotCallbacks))
         test_suite.addTests(loader.loadTestsFromTestCase(TestDataCallbacks))

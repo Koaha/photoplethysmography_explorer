@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: ppg-analysis-tool
+    runtime: python
+    plan: starter
+    buildCommand: |
+      pip install -r requirements-prod.txt
+    startCommand: python main-prod.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: "8080"
+      - key: DEBUG
+        value: "false"
+    healthCheckPath: /health
+    autoDeploy: true
+    region: oregon
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetConcurrency: 100
+      targetMemoryUtilizationPercent: 80
